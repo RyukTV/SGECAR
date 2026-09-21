@@ -1,0 +1,51 @@
+@page "/api-status"
+@inject SistemaGestionEmpresarial.Web.Services.ApiClient ApiClient
+
+<PageTitle>Estado de la API</PageTitle>
+
+<h1>Estado de la API</h1>
+<p>Esta página temporal comprueba la comunicación entre Blazor WebAssembly y la Web API.</p>
+
+<button @onclick="ProbarConexionAsync" disabled="@probando">Probar conexión</button>
+
+@if (resultado is not null)
+{
+    <p role="status">@resultado</p>
+}
+
+@code {
+    private bool probando;
+    private string? resultado;
+
+    private async Task ProbarConexionAsync()
+    {
+        probando = true;
+        resultado = null;
+
+        try
+        {
+            var respuesta = await ApiClient.CheckHealthAsync();
+            resultado = respuesta.Status == "ok"
+                ? "API conectada"
+                : "No se pudo conectar con la API";
+        }
+        catch (HttpRequestException)
+        {
+            resultado = "No se pudo conectar con la API";
+        }
+        catch (TaskCanceledException)
+        {
+            resultado = "No se pudo conectar con la API";
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            resultado = "No se pudo conectar con la API";
+        }
+        catch (InvalidOperationException)
+        {
+            resultado = "No se pudo conectar con la API";
+        }
+
+        probando = false;
+    }
+}
