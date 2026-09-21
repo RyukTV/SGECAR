@@ -1,59 +1,114 @@
 @page "/"
 
-<PageTitle>Inicio - Sistema de Gestión Empresarial</PageTitle>
+<PageTitle>Inicio - SGECAR</PageTitle>
 
-<div class="home-container">
+<div class="dashboard-wrapper">
     <AuthorizeView>
         <Authorized>
-            <div class="welcome-card">
-                <h1>Bienvenido, @context.User.Identity?.Name 👋</h1>
-                <p class="role-desc">
-                    Ha iniciado sesión exitosamente con el rol de 
-                    <strong class="highlight-role">@(context.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Sin Rol")</strong>.
-                </p>
-
-                <div class="permissions-summary">
-                    <h3>Permisos asignados a su rol (Etapa I):</h3>
-                    @if (context.User.IsInRole("Administrador"))
-                    {
-                        <div class="perm-box admin">
-                            <span class="badge">Acceso Total</span>
-                            <p>Puede <strong>Agregar</strong>, <strong>Modificar</strong>, <strong>Eliminar</strong>, <strong>Consultar</strong> y <strong>Crear Usuarios/Roles</strong>.</p>
-                        </div>
-                    }
-                    else if (context.User.IsInRole("Supervisor"))
-                    {
-                        <div class="perm-box supervisor">
-                            <span class="badge">Supervisor</span>
-                            <p>Puede <strong>Consultar</strong> y <strong>Modificar</strong>. <span class="restricted">NO puede eliminar registros.</span></p>
-                        </div>
-                    }
-                    else if (context.User.IsInRole("Ejecutor"))
-                    {
-                        <div class="perm-box ejecutor">
-                            <span class="badge">Ejecutor</span>
-                            <p>Puede <strong>Consultar</strong> y <strong>Agregar</strong>. <span class="restricted">NO puede modificar ni eliminar registros.</span></p>
-                        </div>
-                    }
-                    else
-                    {
-                        <p>No se encontraron permisos especiales definidos para su usuario.</p>
-                    }
-                </div>
-
-                <div class="quick-links">
-                    <a href="api-status" class="btn btn-secondary">Verificar conexión API</a>
+            <!-- Banner de Bienvenida Moderno -->
+            <div class="hero-welcome">
+                <div class="hero-info">
+                    <span class="greeting-badge">Sesión Activa</span>
+                    <h1>¡Hola, @context.User.Identity?.Name! 👋</h1>
+                    <p class="hero-sub">
+                        Autenticado con éxito en el Sistema de Gestión Empresarial. Tu nivel de acceso actual es: 
+                        <span class="role-pill">@(context.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Usuario")</span>
+                    </p>
                 </div>
             </div>
+
+            <!-- Matriz de Permisos por Rol (Caso Práctico 1) -->
+            <div class="section-title">
+                <h2>Control de Acceso y Permisos (Etapa I)</h2>
+                <p>Resumen de operaciones permitidas y restringidas para tu rol:</p>
+            </div>
+
+            <div class="cards-grid">
+                <!-- Tarjeta Consultar -->
+                <div class="perm-card card-active">
+                    <div class="card-icon icon-blue">🔍</div>
+                    <div class="card-content">
+                        <h3>1. Consultar</h3>
+                        <p>Búsqueda y visualización de registros.</p>
+                        <span class="status-badge allowed">✓ Permitido</span>
+                    </div>
+                </div>
+
+                <!-- Tarjeta Agregar -->
+                <div class="perm-card @(context.User.IsInRole("Administrador") || context.User.IsInRole("Ejecutor") ? "card-active" : "card-disabled")">
+                    <div class="card-icon icon-green">➕</div>
+                    <div class="card-content">
+                        <h3>2. Agregar</h3>
+                        <p>Creación de nuevos registros empresariales.</p>
+                        @if (context.User.IsInRole("Administrador") || context.User.IsInRole("Ejecutor"))
+                        {
+                            <span class="status-badge allowed">✓ Permitido</span>
+                        }
+                        else
+                        {
+                            <span class="status-badge denied">✕ Bloqueado (Supervisor no puede agregar)</span>
+                        }
+                    </div>
+                </div>
+
+                <!-- Tarjeta Modificar -->
+                <div class="perm-card @(context.User.IsInRole("Administrador") || context.User.IsInRole("Supervisor") ? "card-active" : "card-disabled")">
+                    <div class="card-icon icon-orange">✏️</div>
+                    <div class="card-content">
+                        <h3>3. Modificar</h3>
+                        <p>Edición y actualización de datos.</p>
+                        @if (context.User.IsInRole("Administrador") || context.User.IsInRole("Supervisor"))
+                        {
+                            <span class="status-badge allowed">✓ Permitido</span>
+                        }
+                        else
+                        {
+                            <span class="status-badge denied">✕ Bloqueado (Ejecutor no puede modificar)</span>
+                        }
+                    </div>
+                </div>
+
+                <!-- Tarjeta Eliminar -->
+                <div class="perm-card @(context.User.IsInRole("Administrador") ? "card-active" : "card-disabled")">
+                    <div class="card-icon icon-red">🗑️</div>
+                    <div class="card-content">
+                        <h3>4. Eliminar</h3>
+                        <p>Eliminación definitiva de registros.</p>
+                        @if (context.User.IsInRole("Administrador"))
+                        {
+                            <span class="status-badge allowed">✓ Permitido (Solo Administrador)</span>
+                        }
+                        else
+                        {
+                            <span class="status-badge denied">✕ Bloqueado (@(context.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value) no puede eliminar)</span>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel de Administración Exclusivo -->
+            @if (context.User.IsInRole("Administrador"))
+            {
+                <div class="admin-panel-card">
+                    <div class="admin-badge">Panel Exclusivo</div>
+                    <h3>⚙️ Creación de Usuarios y Gestión de Roles</h3>
+                    <p>Como <strong>Administrador</strong>, tienes acceso total para crear nuevos usuarios, definir roles y auditar accesos en el sistema.</p>
+                </div>
+            }
         </Authorized>
         <NotAuthorized>
-            <div class="guest-card">
+            <div class="guest-hero">
+                <div class="guest-logo">🏢</div>
                 <h1>Sistema de Gestión Empresarial (SGECAR)</h1>
-                <p class="lead">Bienvenido a la plataforma de gestión empresarial con control de acceso por roles.</p>
-                <p>Para ingresar al sistema y gestionar las operaciones según sus permisos autorizados, inicie sesión con su cuenta.</p>
-                <div class="cta-actions">
-                    <a href="login" class="btn btn-primary btn-lg">Iniciar Sesión</a>
-                    <a href="api-status" class="btn btn-outline btn-lg">Verificar API</a>
+                <p class="guest-sub">Plataforma cliente-servidor con arquitectura moderna y control de acceso por roles.</p>
+                <div class="guest-actions">
+                    <a href="login" class="btn btn-primary-hero">
+                        <span>Iniciar Sesión</span>
+                        <span>→</span>
+                    </a>
+                    <a href="api-status" class="btn btn-secondary-hero">
+                        <span>Ver Diagnóstico de API</span>
+                    </a>
                 </div>
             </div>
         </NotAuthorized>
@@ -61,137 +116,248 @@
 </div>
 
 <style>
-    .home-container {
-        max-width: 800px;
-        margin: 40px auto;
+    .dashboard-wrapper {
+        max-width: 1050px;
+        margin: 0 auto;
     }
 
-    .welcome-card, .guest-card {
-        background: #ffffff;
-        border: 1px solid #d9e2ec;
-        border-radius: 8px;
-        padding: 36px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    .hero-welcome {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        color: #ffffff;
+        padding: 32px 36px;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.2);
+        margin-bottom: 32px;
     }
 
-    .welcome-card h1, .guest-card h1 {
-        margin-top: 0;
-        color: #102a43;
-        font-size: 1.8rem;
-    }
-
-    .lead {
-        font-size: 1.15rem;
-        color: #334e68;
-        margin-bottom: 12px;
-    }
-
-    .role-desc {
-        font-size: 1.05rem;
-        color: #486581;
-    }
-
-    .highlight-role {
-        color: #0b69a3;
-    }
-
-    .permissions-summary {
-        margin: 24px 0;
-    }
-
-    .permissions-summary h3 {
-        font-size: 1.1rem;
-        color: #243b53;
-        margin-bottom: 12px;
-    }
-
-    .perm-box {
-        padding: 16px;
-        border-radius: 6px;
-        border-left: 4px solid;
-    }
-
-    .perm-box.admin {
-        background-color: #ebf8fa;
-        border-color: #05828e;
-    }
-
-    .perm-box.supervisor {
-        background-color: #fff8e6;
-        border-color: #cb6e17;
-    }
-
-    .perm-box.ejecutor {
-        background-color: #f0f4f8;
-        border-color: #1976d2;
-    }
-
-    .perm-box .badge {
+    .greeting-badge {
         display: inline-block;
+        background-color: rgba(16, 185, 129, 0.2);
+        color: #34d399;
         font-size: 0.75rem;
         font-weight: 700;
         text-transform: uppercase;
-        padding: 3px 8px;
-        border-radius: 4px;
-        background: rgba(0,0,0,0.1);
-        margin-bottom: 8px;
+        letter-spacing: 0.5px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        margin-bottom: 12px;
     }
 
-    .perm-box p {
+    .hero-welcome h1 {
+        margin: 0 0 10px 0;
+        font-size: 1.85rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+    }
+
+    .hero-sub {
         margin: 0;
-        color: #334e68;
+        color: #94a3b8;
+        font-size: 1rem;
     }
 
-    .restricted {
-        color: #c92a2a;
-        font-weight: 600;
+    .role-pill {
+        display: inline-block;
+        background: #2563eb;
+        color: #ffffff;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.85rem;
     }
 
-    .cta-actions, .quick-links {
+    .section-title {
+        margin-bottom: 20px;
+    }
+
+    .section-title h2 {
+        margin: 0 0 6px 0;
+        font-size: 1.3rem;
+        color: #0f172a;
+        font-weight: 700;
+    }
+
+    .section-title p {
+        margin: 0;
+        color: #64748b;
+        font-size: 0.92rem;
+    }
+
+    .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 18px;
+        margin-bottom: 28px;
+    }
+
+    .perm-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .perm-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+    }
+
+    .card-active {
+        border-top: 3px solid #2563eb;
+    }
+
+    .card-disabled {
+        opacity: 0.65;
+        background-color: #f8fafc;
+        border-top: 3px solid #cbd5e1;
+    }
+
+    .card-icon {
+        font-size: 1.6rem;
+        margin-bottom: 12px;
+    }
+
+    .card-content h3 {
+        margin: 0 0 6px 0;
+        font-size: 1.05rem;
+        color: #0f172a;
+        font-weight: 700;
+    }
+
+    .card-content p {
+        margin: 0 0 14px 0;
+        font-size: 0.85rem;
+        color: #64748b;
+        min-height: 38px;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.78rem;
+        font-weight: 700;
+    }
+
+    .status-badge.allowed {
+        background-color: #ecfdf5;
+        color: #047857;
+        border: 1px solid #a7f3d0;
+    }
+
+    .status-badge.denied {
+        background-color: #fef2f2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+    }
+
+    .admin-panel-card {
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        border: 1px solid #86efac;
+        border-radius: 14px;
+        padding: 24px 28px;
+        margin-top: 20px;
+    }
+
+    .admin-badge {
+        display: inline-block;
+        background-color: #16a34a;
+        color: #ffffff;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 3px 8px;
+        border-radius: 12px;
+        margin-bottom: 10px;
+    }
+
+    .admin-panel-card h3 {
+        margin: 0 0 8px 0;
+        font-size: 1.2rem;
+        color: #14532d;
+    }
+
+    .admin-panel-card p {
+        margin: 0;
+        color: #166534;
+        font-size: 0.95rem;
+    }
+
+    /* Vista Invitado (Guest Hero) */
+    .guest-hero {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        padding: 60px 40px;
+        text-align: center;
+        max-width: 680px;
+        margin: 30px auto;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+    }
+
+    .guest-logo {
+        font-size: 3.5rem;
+        margin-bottom: 18px;
+    }
+
+    .guest-hero h1 {
+        margin: 0 0 12px 0;
+        font-size: 1.9rem;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.02em;
+    }
+
+    .guest-sub {
+        margin: 0 auto 32px auto;
+        max-width: 500px;
+        color: #64748b;
+        font-size: 1.05rem;
+        line-height: 1.5;
+    }
+
+    .guest-actions {
         display: flex;
-        gap: 12px;
-        margin-top: 24px;
+        justify-content: center;
+        gap: 16px;
     }
 
     .btn {
-        display: inline-block;
-        padding: 10px 18px;
-        border-radius: 4px;
-        text-decoration: none;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .btn-primary {
-        background-color: #186faf;
-        color: #ffffff;
-    }
-
-    .btn-primary:hover {
-        background-color: #0f548c;
-    }
-
-    .btn-secondary {
-        background-color: #e2e8f0;
-        color: #334e68;
-    }
-
-    .btn-secondary:hover {
-        background-color: #cbd5e1;
-    }
-
-    .btn-outline {
-        border: 1px solid #bcccdc;
-        color: #334e68;
-    }
-
-    .btn-outline:hover {
-        background-color: #f0f4f8;
-    }
-
-    .btn-lg {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
         padding: 12px 24px;
-        font-size: 1.05rem;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary-hero {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-primary-hero:hover {
+        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 18px rgba(37, 99, 235, 0.4);
+    }
+
+    .btn-secondary-hero {
+        background: #f1f5f9;
+        color: #334155;
+        border: 1px solid #cbd5e1;
+    }
+
+    .btn-secondary-hero:hover {
+        background: #e2e8f0;
+        color: #0f172a;
     }
 </style>

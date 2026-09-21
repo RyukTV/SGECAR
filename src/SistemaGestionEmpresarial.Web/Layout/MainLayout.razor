@@ -1,151 +1,281 @@
 @inherits LayoutComponentBase
 @inject SistemaGestionEmpresarial.Web.Services.AuthApiService AuthApi
+@inject SistemaGestionEmpresarial.Web.Services.ApiClient ApiClient
 @inject NavigationManager Navigation
 
-<div class="page-container">
-    <header class="app-header">
-        <div class="brand">
-            <a href="/" class="brand-title">🏢 SGECAR</a>
-            <span class="brand-sub">Sistema de Gestión Empresarial</span>
+<div class="app-layout">
+    <header class="top-navbar">
+        <div class="nav-brand">
+            <a href="/" class="brand-link">
+                <span class="brand-logo">🏢</span>
+                <span class="brand-name">SGECAR</span>
+            </a>
+            <span class="brand-tag">Gestión Empresarial</span>
         </div>
 
-        <nav class="nav-links">
-            <NavLink href="/" Match="NavLinkMatch.All">Inicio</NavLink>
-            <NavLink href="api-status">Estado API</NavLink>
+        <div class="nav-center">
+            <!-- Indicador Reactivo de API en la barra superior -->
+            <a href="api-status" class="api-indicator @(apiConectada ? "api-online" : "api-offline")" title="Haz clic para ver diagnóstico de la API">
+                <span class="indicator-dot"></span>
+                <span>@(apiConectada ? "API Conectada" : "API Desconectada")</span>
+            </a>
+        </div>
+
+        <nav class="nav-actions">
+            <NavLink href="/" class="nav-item" Match="NavLinkMatch.All">Inicio</NavLink>
+            <NavLink href="api-status" class="nav-item">Diagnóstico</NavLink>
 
             <AuthorizeView>
                 <Authorized>
-                    <span class="user-badge">
-                        👤 <strong>@context.User.Identity?.Name</strong>
-                        <span class="role-tag">
-                            @(context.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Usuario")
-                        </span>
-                    </span>
-                    <button class="btn-logout" @onclick="CerrarSesionAsync">Cerrar Sesión</button>
+                    <div class="user-chip">
+                        <div class="user-avatar">
+                            @(context.User.Identity?.Name?.Substring(0, 1).ToUpper() ?? "U")
+                        </div>
+                        <div class="user-meta">
+                            <span class="user-name">@context.User.Identity?.Name</span>
+                            <span class="user-role-badge role-@(context.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value?.ToLower() ?? "default")">
+                                @(context.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Usuario")
+                            </span>
+                        </div>
+                    </div>
+                    <button class="btn-logout" @onclick="CerrarSesionAsync" title="Cerrar sesión activa">
+                        Cerrar Sesión
+                    </button>
                 </Authorized>
                 <NotAuthorized>
-                    <NavLink href="login" class="btn-login-nav">Iniciar Sesión</NavLink>
+                    <NavLink href="login" class="btn-login-nav">
+                        Iniciar Sesión →
+                    </NavLink>
                 </NotAuthorized>
             </AuthorizeView>
         </nav>
     </header>
 
-    <main class="content-body">
+    <main class="main-content">
         @Body
     </main>
 </div>
 
 <style>
-    .page-container {
+    .app-layout {
         display: flex;
         flex-direction: column;
         min-height: 100vh;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: #f8fafc;
     }
 
-    .app-header {
+    .top-navbar {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background-color: #102a43;
+        background-color: #0f172a;
         color: #ffffff;
-        padding: 12px 24px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        padding: 12px 32px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        border-bottom: 1px solid #1e293b;
     }
 
-    .brand {
+    .nav-brand {
         display: flex;
-        align-items: baseline;
-        gap: 10px;
+        align-items: center;
+        gap: 12px;
     }
 
-    .brand-title {
-        color: #ffffff;
+    .brand-link {
+        display: flex;
+        align-items: center;
+        gap: 8px;
         text-decoration: none;
-        font-size: 1.25rem;
+        color: #ffffff;
+    }
+
+    .brand-logo {
+        font-size: 1.4rem;
+    }
+
+    .brand-name {
+        font-size: 1.2rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+    }
+
+    .brand-tag {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        padding-left: 10px;
+        border-left: 1px solid #334155;
+    }
+
+    /* Indicador API en Navbar */
+    .api-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.78rem;
         font-weight: 700;
+        text-decoration: none;
+        transition: transform 0.15s ease;
     }
 
-    .brand-sub {
-        color: #9fb3c8;
-        font-size: 0.85rem;
+    .api-indicator:hover {
+        transform: translateY(-1px);
     }
 
-    .nav-links {
+    .api-online {
+        background-color: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+
+    .api-online .indicator-dot {
+        background-color: #10b981;
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.4);
+    }
+
+    .api-offline {
+        background-color: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.35);
+    }
+
+    .api-offline .indicator-dot {
+        background-color: #ef4444;
+    }
+
+    .indicator-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .nav-actions {
         display: flex;
         align-items: center;
         gap: 16px;
     }
 
-    .nav-links a {
-        color: #d9e2ec;
+    .nav-item {
+        color: #cbd5e1;
         text-decoration: none;
-        font-size: 0.95rem;
-        padding: 6px 10px;
-        border-radius: 4px;
-        transition: background-color 0.2s;
+        font-size: 0.9rem;
+        font-weight: 500;
+        padding: 6px 12px;
+        border-radius: 6px;
+        transition: all 0.2s ease;
     }
 
-    .nav-links a:hover, .nav-links a.active {
-        background-color: #243b53;
+    .nav-item:hover, .nav-item.active {
         color: #ffffff;
+        background-color: #1e293b;
     }
 
-    .user-badge {
-        display: inline-flex;
+    .user-chip {
+        display: flex;
         align-items: center;
-        gap: 8px;
-        background-color: #243b53;
-        padding: 4px 12px;
-        border-radius: 16px;
-        font-size: 0.85rem;
-        color: #f0f4f8;
+        gap: 10px;
+        background-color: #1e293b;
+        padding: 4px 12px 4px 6px;
+        border-radius: 24px;
+        border: 1px solid #334155;
     }
 
-    .role-tag {
-        background-color: #0b69a3;
+    .user-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
         color: #ffffff;
-        padding: 2px 8px;
-        border-radius: 10px;
-        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+
+    .user-meta {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.15;
+    }
+
+    .user-name {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #f8fafc;
+    }
+
+    .user-role-badge {
+        font-size: 0.68rem;
         font-weight: 600;
         text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
+    .role-administrador { color: #34d399; }
+    .role-supervisor { color: #fbbf24; }
+    .role-ejecutor { color: #60a5fa; }
+    .role-default { color: #94a3b8; }
+
     .btn-logout {
-        background-color: #ba2525;
-        color: #ffffff;
-        border: none;
+        background-color: transparent;
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.4);
         padding: 6px 12px;
-        border-radius: 4px;
-        font-size: 0.85rem;
-        cursor: pointer;
+        border-radius: 6px;
+        font-size: 0.82rem;
         font-weight: 600;
-        transition: background-color 0.2s;
+        cursor: pointer;
+        transition: all 0.2s ease;
     }
 
     .btn-logout:hover {
-        background-color: #8c1d1d;
+        background-color: #dc2626;
+        color: #ffffff;
+        border-color: #dc2626;
     }
 
     .btn-login-nav {
-        background-color: #1976d2 !important;
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
         color: #ffffff !important;
-        font-weight: 600;
+        text-decoration: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 0.88rem;
+        font-weight: 700;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
     }
 
     .btn-login-nav:hover {
-        background-color: #115293 !important;
+        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+        transform: translateY(-1px);
     }
 
-    .content-body {
+    .main-content {
         flex: 1;
-        background-color: #f8fafc;
-        padding: 24px;
+        padding: 30px;
     }
 </style>
 
 @code {
+    private bool apiConectada = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var res = await ApiClient.CheckHealthAsync();
+            apiConectada = res?.Status == "ok";
+        }
+        catch
+        {
+            apiConectada = false;
+        }
+    }
+
     private async Task CerrarSesionAsync()
     {
         await AuthApi.LogoutAsync();
