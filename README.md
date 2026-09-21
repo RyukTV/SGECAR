@@ -131,3 +131,18 @@ Antes de integrarse, todo cambio debe:
 Si dos integrantes necesitan modificar el mismo archivo o la misma funcionalidad, deben coordinarse antes de comenzar.
 
 Si aparece un conflicto de Git importante, no debe resolverse a ciegas. Debe revisarse con el integrante responsable del código afectado.
+
+## Estructura técnica
+
+- `src/SistemaGestionEmpresarial.Contracts`: contratos HTTP compartidos.
+- `src/SistemaGestionEmpresarial.Api`: Web API con Controllers y base para EF Core.
+- `src/SistemaGestionEmpresarial.Web`: Blazor WebAssembly independiente.
+
+Se requiere el SDK .NET 8. Para ejecutar localmente, abrir dos terminales y usar:
+
+```bash
+dotnet run --project src/SistemaGestionEmpresarial.Api
+dotnet run --project src/SistemaGestionEmpresarial.Web
+```
+
+La API escucha en `http://localhost:5080` y el frontend en `http://localhost:5180`. La página temporal `/api-status` permite comprobar la conexión. Esta base no crea la base de datos ni implementa autenticación.
