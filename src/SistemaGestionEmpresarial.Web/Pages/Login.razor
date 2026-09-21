@@ -1,18 +1,11 @@
 @page "/login"
 @inject SistemaGestionEmpresarial.Web.Services.AuthApiService AuthApi
-@inject SistemaGestionEmpresarial.Web.Services.ApiClient ApiClient
 @inject NavigationManager Navigation
 
 <PageTitle>Iniciar Sesión - SGECAR</PageTitle>
 
 <div class="login-wrapper">
     <div class="login-card">
-        <!-- Indicador de API en Vivo (Sin emojis, sólo dot y texto limpio) -->
-        <div class="api-status-pill @(apiConectada ? "status-online" : "status-offline")" title="Estado de la API">
-            <span class="status-dot"></span>
-            <span>@(apiConectada ? "API Conectada" : "API Desconectada")</span>
-        </div>
-
         <div class="login-header">
             <div class="logo-box">
                 <svg class="header-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -212,50 +205,6 @@
         width: 100%;
         max-width: 440px;
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
-    }
-
-    /* Pill superior con estado API */
-    .api-status-pill {
-        position: absolute;
-        top: 18px;
-        right: 18px;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 0.7rem;
-        font-weight: 700;
-        letter-spacing: 0.3px;
-        text-transform: uppercase;
-    }
-
-    .status-online {
-        background-color: #ecfdf5;
-        color: #047857;
-        border: 1px solid #a7f3d0;
-    }
-
-    .status-online .status-dot {
-        background-color: #10b981;
-        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
-    }
-
-    .status-offline {
-        background-color: #fef2f2;
-        color: #b91c1c;
-        border: 1px solid #fecaca;
-    }
-
-    .status-offline .status-dot {
-        background-color: #ef4444;
-    }
-
-    .status-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        display: inline-block;
     }
 
     .login-header {
@@ -606,7 +555,6 @@
     private SistemaGestionEmpresarial.Contracts.LoginRequest loginModel = new();
     private bool mostrarContrasena = false;
     private bool cargando = false;
-    private bool apiConectada = false;
     private string? mensajeError;
     private string? mensajeExito;
 
@@ -615,19 +563,6 @@
     private const int MaxIntentosPermitidos = 3;
     private bool estaBloqueado = false;
     private int segundosBloqueoRestantes = 0;
-
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            var res = await ApiClient.CheckHealthAsync();
-            apiConectada = res?.Status == "ok";
-        }
-        catch
-        {
-            apiConectada = false;
-        }
-    }
 
     private void ToggleMostrarContrasena()
     {

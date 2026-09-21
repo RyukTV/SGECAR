@@ -1,6 +1,5 @@
 @inherits LayoutComponentBase
 @inject SistemaGestionEmpresarial.Web.Services.AuthApiService AuthApi
-@inject SistemaGestionEmpresarial.Web.Services.ApiClient ApiClient
 @inject NavigationManager Navigation
 
 <div class="app-layout">
@@ -17,14 +16,6 @@
                     <span class="brand-name">SGECAR</span>
                     <span class="brand-tag">Gestión Empresarial</span>
                 </div>
-            </a>
-        </div>
-
-        <div class="nav-center">
-            <!-- Indicador Reactivo de API en Barra Superior -->
-            <a href="api-status" class="api-indicator @(apiConectada ? "api-online" : "api-offline")" title="Ver diagnóstico de conexión con la API">
-                <span class="indicator-dot"></span>
-                <span>@(apiConectada ? "API Conectada" : "API Desconectada")</span>
             </a>
         </div>
 
@@ -168,52 +159,6 @@
         flex-shrink: 0;
     }
 
-    /* Indicador API */
-    .api-indicator {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 5px 12px;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-decoration: none;
-        letter-spacing: 0.3px;
-        transition: transform 0.15s ease, background-color 0.2s ease;
-    }
-
-    .api-indicator:hover {
-        transform: translateY(-1px);
-    }
-
-    .api-online {
-        background-color: rgba(16, 185, 129, 0.12);
-        color: #34d399;
-        border: 1px solid rgba(16, 185, 129, 0.3);
-    }
-
-    .api-online .indicator-dot {
-        background-color: #10b981;
-        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.35);
-    }
-
-    .api-offline {
-        background-color: rgba(239, 68, 68, 0.12);
-        color: #f87171;
-        border: 1px solid rgba(239, 68, 68, 0.3);
-    }
-
-    .api-offline .indicator-dot {
-        background-color: #ef4444;
-    }
-
-    .indicator-dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        display: inline-block;
-    }
-
     .nav-actions {
         display: flex;
         align-items: center;
@@ -353,21 +298,6 @@
 </style>
 
 @code {
-    private bool apiConectada = false;
-
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            var res = await ApiClient.CheckHealthAsync();
-            apiConectada = res?.Status == "ok";
-        }
-        catch
-        {
-            apiConectada = false;
-        }
-    }
-
     private async Task CerrarSesionAsync()
     {
         await AuthApi.LogoutAsync();
