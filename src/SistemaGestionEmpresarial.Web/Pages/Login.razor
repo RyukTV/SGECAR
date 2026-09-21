@@ -1,0 +1,303 @@
+@page "/login"
+@inject SistemaGestionEmpresarial.Web.Services.AuthApiService AuthApi
+@inject NavigationManager Navigation
+
+<PageTitle>Inicio de Sesión - SGECAR</PageTitle>
+
+<div class="login-wrapper">
+    <div class="login-card">
+        <div class="login-header">
+            <h2>Sistema de Gestión Empresarial</h2>
+            <p class="subtitle">Control de Acceso por Roles (SGECAR)</p>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(mensajeError))
+        {
+            <div class="alert alert-danger" role="alert">
+                <strong>Error:</strong> @mensajeError
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(mensajeExito))
+        {
+            <div class="alert alert-success" role="alert">
+                @mensajeExito
+            </div>
+        }
+
+        <form @onsubmit="IniciarSesionAsync" @onsubmit:preventDefault>
+            <div class="form-group">
+                <label for="username">Nombre de Usuario:</label>
+                <input id="username" 
+                       type="text" 
+                       class="form-control" 
+                       placeholder="Ejemplo: admin, supervisor, ejecutor" 
+                       @bind="loginModel.Username" 
+                       disabled="@cargando" 
+                       autocomplete="username" />
+            </div>
+
+            <div class="form-group">
+                <label for="password">Contraseña:</label>
+                <div class="password-input-group">
+                    <input id="password" 
+                           type="@(mostrarContrasena ? "text" : "password")" 
+                           class="form-control" 
+                           placeholder="Ingrese su contraseña" 
+                           @bind="loginModel.Password" 
+                           disabled="@cargando" 
+                           autocomplete="current-password" />
+                    <button type="button" 
+                            class="btn-toggle-password" 
+                            @onclick="ToggleMostrarContrasena" 
+                            tabindex="-1"
+                            title="@(mostrarContrasena ? "Ocultar" : "Mostrar") contraseña">
+                        @(mostrarContrasena ? "🙈" : "👁️")
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-options">
+                <label class="checkbox-label">
+                    <input type="checkbox" @bind="mostrarContrasena" />
+                    Mostrar contraseña
+                </label>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" disabled="@cargando">
+                @if (cargando)
+                {
+                    <span>Verificando credenciales...</span>
+                }
+                else
+                {
+                    <span>Iniciar Sesión</span>
+                }
+            </button>
+        </form>
+
+        <div class="test-credentials">
+            <p class="test-title"><strong>Usuarios de prueba:</strong></p>
+            <ul>
+                <li><strong>admin</strong> / <code>admin123</code> &mdash; Rol: <em>Administrador</em></li>
+                <li><strong>supervisor</strong> / <code>supervisor123</code> &mdash; Rol: <em>Supervisor</em></li>
+                <li><strong>ejecutor</strong> / <code>ejecutor123</code> &mdash; Rol: <em>Ejecutor</em></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<style>
+    .login-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 80vh;
+        padding: 20px;
+    }
+
+    .login-card {
+        background: #ffffff;
+        border: 1px solid #d9e2ec;
+        border-radius: 8px;
+        padding: 32px;
+        width: 100%;
+        max-width: 440px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .login-header {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+
+    .login-header h2 {
+        font-size: 1.4rem;
+        margin: 0 0 8px 0;
+        color: #102a43;
+    }
+
+    .login-header .subtitle {
+        color: #627d98;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #334e68;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #bcccdc;
+        border-radius: 4px;
+        font-size: 0.95rem;
+        box-sizing: border-box;
+    }
+
+    .form-control:focus {
+        border-color: #2680eb;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(38, 128, 235, 0.2);
+    }
+
+    .password-input-group {
+        position: relative;
+        display: flex;
+    }
+
+    .btn-toggle-password {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.1rem;
+        padding: 4px;
+    }
+
+    .form-options {
+        margin-bottom: 20px;
+        font-size: 0.85rem;
+        color: #486581;
+    }
+
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+    }
+
+    .btn-primary {
+        background-color: #186faf;
+        color: #ffffff;
+        border: none;
+        border-radius: 4px;
+        padding: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+        transition: background-color 0.2s ease;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        background-color: #0f548c;
+    }
+
+    .btn-primary:disabled {
+        background-color: #9fb3c8;
+        cursor: not-allowed;
+    }
+
+    .alert {
+        padding: 10px 14px;
+        border-radius: 4px;
+        margin-bottom: 16px;
+        font-size: 0.9rem;
+    }
+
+    .alert-danger {
+        background-color: #ffe3e3;
+        border: 1px solid #f8d7da;
+        color: #9e2a2b;
+    }
+
+    .alert-success {
+        background-color: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+    }
+
+    .test-credentials {
+        margin-top: 24px;
+        padding-top: 16px;
+        border-top: 1px dashed #d9e2ec;
+        font-size: 0.82rem;
+        color: #627d98;
+    }
+
+    .test-credentials .test-title {
+        margin-bottom: 6px;
+    }
+
+    .test-credentials ul {
+        margin: 0;
+        padding-left: 18px;
+    }
+
+    .test-credentials li {
+        margin-bottom: 4px;
+    }
+</style>
+
+@code {
+    private SistemaGestionEmpresarial.Contracts.LoginRequest loginModel = new();
+    private bool mostrarContrasena = false;
+    private bool cargando = false;
+    private string? mensajeError;
+    private string? mensajeExito;
+
+    private void ToggleMostrarContrasena()
+    {
+        mostrarContrasena = !mostrarContrasena;
+    }
+
+    private async Task IniciarSesionAsync()
+    {
+        mensajeError = null;
+        mensajeExito = null;
+
+        // 1. Validación de campos vacíos en el cliente
+        if (string.IsNullOrWhiteSpace(loginModel.Username))
+        {
+            mensajeError = "Por favor, ingrese su nombre de usuario.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(loginModel.Password))
+        {
+            mensajeError = "Por favor, ingrese su contraseña.";
+            return;
+        }
+
+        cargando = true;
+
+        try
+        {
+            // 2. Delegación obligatoria al servicio AuthApiService (sin HTTP directo en la página)
+            var resultado = await AuthApi.LoginAsync(loginModel);
+
+            if (resultado.Success)
+            {
+                mensajeExito = resultado.Message ?? "Autenticación correcta. Redirigiendo...";
+                await Task.Delay(400);
+                Navigation.NavigateTo("/");
+            }
+            else
+            {
+                mensajeError = resultado.Message ?? "Usuario o contraseña incorrectos.";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"Error inesperado al intentar iniciar sesión: {ex.Message}";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+}
