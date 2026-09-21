@@ -9,7 +9,7 @@
             <div class="hero-welcome">
                 <div class="hero-info">
                     <span class="greeting-badge">Sesión Activa</span>
-                    <h1>¡Hola, @context.User.Identity?.Name! 👋</h1>
+                    <h1>¡Hola, @context.User.Identity?.Name!</h1>
                     <p class="hero-sub">
                         Autenticado con éxito en el Sistema de Gestión Empresarial. Tu nivel de acceso actual es: 
                         <span class="role-pill">@(context.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Usuario")</span>
@@ -26,17 +26,27 @@
             <div class="cards-grid">
                 <!-- Tarjeta Consultar -->
                 <div class="perm-card card-active">
-                    <div class="card-icon icon-blue">🔍</div>
+                    <div class="card-icon icon-neutral">
+                        <svg class="card-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                    </div>
                     <div class="card-content">
                         <h3>1. Consultar</h3>
-                        <p>Búsqueda y visualización de registros.</p>
+                        <p>Búsqueda y visualización de registros empresariales.</p>
                         <span class="status-badge allowed">✓ Permitido</span>
                     </div>
                 </div>
 
                 <!-- Tarjeta Agregar -->
                 <div class="perm-card @(context.User.IsInRole("Administrador") || context.User.IsInRole("Ejecutor") ? "card-active" : "card-disabled")">
-                    <div class="card-icon icon-green">➕</div>
+                    <div class="card-icon icon-neutral">
+                        <svg class="card-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>
+                    </div>
                     <div class="card-content">
                         <h3>2. Agregar</h3>
                         <p>Creación de nuevos registros empresariales.</p>
@@ -53,10 +63,14 @@
 
                 <!-- Tarjeta Modificar -->
                 <div class="perm-card @(context.User.IsInRole("Administrador") || context.User.IsInRole("Supervisor") ? "card-active" : "card-disabled")">
-                    <div class="card-icon icon-orange">✏️</div>
+                    <div class="card-icon icon-neutral">
+                        <svg class="card-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                        </svg>
+                    </div>
                     <div class="card-content">
                         <h3>3. Modificar</h3>
-                        <p>Edición y actualización de datos.</p>
+                        <p>Edición y actualización de datos existentes.</p>
                         @if (context.User.IsInRole("Administrador") || context.User.IsInRole("Supervisor"))
                         {
                             <span class="status-badge allowed">✓ Permitido</span>
@@ -70,10 +84,17 @@
 
                 <!-- Tarjeta Eliminar -->
                 <div class="perm-card @(context.User.IsInRole("Administrador") ? "card-active" : "card-disabled")">
-                    <div class="card-icon icon-red">🗑️</div>
+                    <div class="card-icon icon-neutral">
+                        <svg class="card-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                            <line x1="10" y1="11" x2="10" y2="17" />
+                            <line x1="14" y1="11" x2="14" y2="17" />
+                        </svg>
+                    </div>
                     <div class="card-content">
                         <h3>4. Eliminar</h3>
-                        <p>Eliminación definitiva de registros.</p>
+                        <p>Eliminación definitiva de registros del sistema.</p>
                         @if (context.User.IsInRole("Administrador"))
                         {
                             <span class="status-badge allowed">✓ Permitido (Solo Administrador)</span>
@@ -90,23 +111,44 @@
             @if (context.User.IsInRole("Administrador"))
             {
                 <div class="admin-panel-card">
-                    <div class="admin-badge">Panel Exclusivo</div>
-                    <h3>⚙️ Creación de Usuarios y Gestión de Roles</h3>
-                    <p>Como <strong>Administrador</strong>, tienes acceso total para crear nuevos usuarios, definir roles y auditar accesos en el sistema.</p>
+                    <div class="admin-top">
+                        <span class="admin-badge">Panel Exclusivo</span>
+                    </div>
+                    <div class="admin-header">
+                        <div class="admin-icon-box">
+                            <svg class="admin-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3>Creación de Usuarios y Gestión de Roles</h3>
+                            <p>Como <strong>Administrador</strong>, tienes acceso total para crear nuevos usuarios, definir roles y auditar accesos en el sistema.</p>
+                        </div>
+                    </div>
                 </div>
             }
         </Authorized>
         <NotAuthorized>
             <div class="guest-hero">
-                <div class="guest-logo">🏢</div>
+                <div class="guest-logo">
+                    <svg class="guest-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 21h18M3 7v14M21 7v14M6 11h4M6 15h4M14 11h4M14 15h4M9 3h6v4H9z" />
+                    </svg>
+                </div>
                 <h1>Sistema de Gestión Empresarial (SGECAR)</h1>
                 <p class="guest-sub">Plataforma cliente-servidor con arquitectura moderna y control de acceso por roles.</p>
                 <div class="guest-actions">
                     <a href="login" class="btn btn-primary-hero">
                         <span>Iniciar Sesión</span>
-                        <span>→</span>
+                        <svg class="btn-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                            <polyline points="12 5 19 12 12 19" />
+                        </svg>
                     </a>
                     <a href="api-status" class="btn btn-secondary-hero">
+                        <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                        </svg>
                         <span>Ver Diagnóstico de API</span>
                     </a>
                 </div>
@@ -119,6 +161,7 @@
     .dashboard-wrapper {
         max-width: 1050px;
         margin: 0 auto;
+        font-family: var(--font-sans);
     }
 
     .hero-welcome {
@@ -128,11 +171,12 @@
         border-radius: 16px;
         box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.2);
         margin-bottom: 32px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
     .greeting-badge {
         display: inline-block;
-        background-color: rgba(16, 185, 129, 0.2);
+        background-color: rgba(16, 185, 129, 0.15);
         color: #34d399;
         font-size: 0.75rem;
         font-weight: 700;
@@ -155,6 +199,7 @@
         margin: 0;
         color: #94a3b8;
         font-size: 1rem;
+        line-height: 1.6;
     }
 
     .role-pill {
@@ -194,10 +239,12 @@
     .perm-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 20px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        border-radius: 14px;
+        padding: 22px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
         transition: transform 0.2s ease, box-shadow 0.2s ease;
+        display: flex;
+        flex-direction: column;
     }
 
     .perm-card:hover {
@@ -216,8 +263,39 @@
     }
 
     .card-icon {
-        font-size: 1.6rem;
-        margin-bottom: 12px;
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 16px;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+    }
+
+    .card-active .card-icon {
+        background: #f8fafc;
+        color: #475569;
+        border-color: #cbd5e1;
+    }
+
+    .card-disabled .card-icon {
+        background: #f1f5f9;
+        color: #94a3b8;
+    }
+
+    .card-icon-svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .card-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
     }
 
     .card-content h3 {
@@ -232,14 +310,17 @@
         font-size: 0.85rem;
         color: #64748b;
         min-height: 38px;
+        line-height: 1.5;
+        flex: 1;
     }
 
     .status-badge {
         display: inline-block;
-        padding: 4px 10px;
+        padding: 5px 10px;
         border-radius: 6px;
         font-size: 0.78rem;
         font-weight: 700;
+        width: fit-content;
     }
 
     .status-badge.allowed {
@@ -255,36 +336,66 @@
     }
 
     .admin-panel-card {
-        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-        border: 1px solid #86efac;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border: 1px solid #cbd5e1;
         border-radius: 14px;
         padding: 24px 28px;
         margin-top: 20px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+    }
+
+    .admin-top {
+        margin-bottom: 12px;
     }
 
     .admin-badge {
         display: inline-block;
-        background-color: #16a34a;
+        background-color: #0f172a;
         color: #ffffff;
         font-size: 0.72rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        padding: 3px 8px;
+        padding: 4px 10px;
         border-radius: 12px;
-        margin-bottom: 10px;
     }
 
-    .admin-panel-card h3 {
-        margin: 0 0 8px 0;
-        font-size: 1.2rem;
-        color: #14532d;
+    .admin-header {
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
     }
 
-    .admin-panel-card p {
+    .admin-icon-box {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        color: #475569;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .admin-icon-svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .admin-header h3 {
+        margin: 0 0 6px 0;
+        font-size: 1.15rem;
+        color: #0f172a;
+        font-weight: 700;
+    }
+
+    .admin-header p {
         margin: 0;
-        color: #166534;
+        color: #475569;
         font-size: 0.95rem;
+        line-height: 1.5;
     }
 
     /* Vista Invitado (Guest Hero) */
@@ -300,8 +411,21 @@
     }
 
     .guest-logo {
-        font-size: 3.5rem;
-        margin-bottom: 18px;
+        width: 64px;
+        height: 64px;
+        border-radius: 16px;
+        background: #f8fafc;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+    }
+
+    .guest-icon-svg {
+        width: 32px;
+        height: 32px;
     }
 
     .guest-hero h1 {
@@ -324,6 +448,7 @@
         display: flex;
         justify-content: center;
         gap: 16px;
+        flex-wrap: wrap;
     }
 
     .btn {
@@ -331,33 +456,40 @@
         align-items: center;
         gap: 8px;
         padding: 12px 24px;
-        border-radius: 8px;
-        font-size: 1rem;
+        border-radius: 10px;
+        font-size: 0.95rem;
         font-weight: 700;
         text-decoration: none;
         transition: all 0.2s ease;
     }
 
+    .btn-arrow-svg, .btn-icon-svg {
+        width: 18px;
+        height: 18px;
+    }
+
     .btn-primary-hero {
         background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
         color: #ffffff;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
     }
 
     .btn-primary-hero:hover {
         background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
         transform: translateY(-2px);
-        box-shadow: 0 8px 18px rgba(37, 99, 235, 0.4);
+        box-shadow: 0 8px 18px rgba(37, 99, 235, 0.35);
+        color: #ffffff;
     }
 
     .btn-secondary-hero {
-        background: #f1f5f9;
+        background: #f8fafc;
         color: #334155;
         border: 1px solid #cbd5e1;
     }
 
     .btn-secondary-hero:hover {
-        background: #e2e8f0;
+        background: #f1f5f9;
         color: #0f172a;
+        border-color: #94a3b8;
     }
 </style>

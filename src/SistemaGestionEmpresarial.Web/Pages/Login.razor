@@ -7,26 +7,32 @@
 
 <div class="login-wrapper">
     <div class="login-card">
-        <!-- Barra de Estado API en Vivo -->
-        <div class="api-status-pill @(apiConectada ? "status-online" : "status-offline")" title="Estado de comunicación con el backend API">
+        <!-- Indicador de API en Vivo (Sin emojis, sólo dot y texto limpio) -->
+        <div class="api-status-pill @(apiConectada ? "status-online" : "status-offline")" title="Estado de la API">
             <span class="status-dot"></span>
             <span>@(apiConectada ? "API Conectada" : "API Desconectada")</span>
         </div>
 
         <div class="login-header">
             <div class="logo-box">
-                <span class="logo-icon">🏢</span>
+                <svg class="header-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 21h18M3 7v14M21 7v14M6 11h4M6 15h4M14 11h4M14 15h4M9 3h6v4H9z" />
+                </svg>
             </div>
-            <h2>Bienvenido a SGECAR</h2>
-            <p class="subtitle">Sistema de Gestión Empresarial con Control de Acceso por Roles</p>
+            <h2>Iniciar Sesión</h2>
+            <p class="subtitle">Sistema de Gestión Empresarial (SGECAR)</p>
         </div>
 
         @if (!string.IsNullOrWhiteSpace(mensajeError))
         {
             <div class="alert alert-danger" role="alert">
-                <span class="alert-icon">⚠️</span>
+                <svg class="alert-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
                 <div>
-                    <strong>Error de acceso</strong>
+                    <strong>Acceso denegado</strong>
                     <p>@mensajeError</p>
                 </div>
             </div>
@@ -35,9 +41,12 @@
         @if (!string.IsNullOrWhiteSpace(mensajeExito))
         {
             <div class="alert alert-success" role="alert">
-                <span class="alert-icon">✓</span>
+                <svg class="alert-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
                 <div>
-                    <strong>¡Autenticado!</strong>
+                    <strong>Autenticado</strong>
                     <p>@mensajeExito</p>
                 </div>
             </div>
@@ -45,9 +54,13 @@
 
         <form @onsubmit="IniciarSesionAsync" @onsubmit:preventDefault class="login-form">
             <div class="form-group">
-                <label for="username">Usuario</label>
+                <label for="username">Nombre de Usuario</label>
                 <div class="input-wrapper">
-                    <span class="input-icon">👤</span>
+                    <!-- Icono Gris de Usuario -->
+                    <svg class="input-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                    </svg>
                     <input id="username" 
                            type="text" 
                            class="form-control" 
@@ -61,7 +74,11 @@
             <div class="form-group">
                 <label for="password">Contraseña</label>
                 <div class="input-wrapper">
-                    <span class="input-icon">🔒</span>
+                    <!-- Icono Gris de Candado -->
+                    <svg class="input-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
                     <input id="password" 
                            type="@(mostrarContrasena ? "text" : "password")" 
                            class="form-control" 
@@ -74,7 +91,22 @@
                             @onclick="ToggleMostrarContrasena" 
                             tabindex="-1"
                             title="@(mostrarContrasena ? "Ocultar" : "Mostrar") contraseña">
-                        @(mostrarContrasena ? "🙈" : "👁️")
+                        @if (mostrarContrasena)
+                        {
+                            <!-- Icono Ojo Cerrado SVG en gris -->
+                            <svg class="eye-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                                <line x1="1" y1="1" x2="23" y2="23" />
+                            </svg>
+                        }
+                        else
+                        {
+                            <!-- Icono Ojo Abierto SVG en gris -->
+                            <svg class="eye-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                        }
                     </button>
                 </div>
             </div>
@@ -82,8 +114,7 @@
             <div class="form-options">
                 <label class="checkbox-container">
                     <input type="checkbox" @bind="mostrarContrasena" />
-                    <span class="checkmark"></span>
-                    Mostrar contraseña
+                    <span>Mostrar contraseña</span>
                 </label>
             </div>
 
@@ -100,21 +131,32 @@
             </button>
         </form>
 
-        <!-- Accesos rápidos para demostración / defensa práctica -->
+        <!-- Accesos rápidos modernos con iconos SVG en gris -->
         <div class="demo-box">
             <div class="demo-header">
                 <span class="demo-badge">Demo</span>
-                <span>Probar credenciales predeterminadas:</span>
+                <span>Probar con credenciales de prueba:</span>
             </div>
             <div class="demo-buttons">
-                <button type="button" class="btn-demo demo-admin" @onclick='() => AutoLlenar("admin", "admin123")' title="Rol: Administrador (Acceso total)">
-                    👑 Admin
+                <button type="button" class="btn-demo" @onclick='() => AutoLlenar("admin", "admin123")' title="Rol: Administrador">
+                    <svg class="demo-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" />
+                    </svg>
+                    <span>Admin</span>
                 </button>
-                <button type="button" class="btn-demo demo-supervisor" @onclick='() => AutoLlenar("supervisor", "supervisor123")' title="Rol: Supervisor (Consultar y Modificar)">
-                    📋 Supervisor
+                <button type="button" class="btn-demo" @onclick='() => AutoLlenar("supervisor", "supervisor123")' title="Rol: Supervisor">
+                    <svg class="demo-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                    </svg>
+                    <span>Supervisor</span>
                 </button>
-                <button type="button" class="btn-demo demo-ejecutor" @onclick='() => AutoLlenar("ejecutor", "ejecutor123")' title="Rol: Ejecutor (Consultar y Agregar)">
-                    ⚙️ Ejecutor
+                <button type="button" class="btn-demo" @onclick='() => AutoLlenar("ejecutor", "ejecutor123")' title="Rol: Ejecutor">
+                    <svg class="demo-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg>
+                    <span>Ejecutor</span>
                 </button>
             </div>
         </div>
@@ -128,6 +170,7 @@
         align-items: center;
         min-height: 80vh;
         padding: 30px 16px;
+        font-family: var(--font-sans);
     }
 
     .login-card {
@@ -138,24 +181,23 @@
         padding: 36px 32px;
         width: 100%;
         max-width: 440px;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
     }
 
     /* Pill superior con estado API */
     .api-status-pill {
         position: absolute;
-        top: 16px;
-        right: 16px;
+        top: 18px;
+        right: 18px;
         display: inline-flex;
         align-items: center;
         gap: 6px;
         padding: 4px 10px;
         border-radius: 20px;
-        font-size: 0.72rem;
+        font-size: 0.7rem;
         font-weight: 700;
+        letter-spacing: 0.3px;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
     }
 
     .status-online {
@@ -166,7 +208,7 @@
 
     .status-online .status-dot {
         background-color: #10b981;
-        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
     }
 
     .status-offline {
@@ -180,8 +222,8 @@
     }
 
     .status-dot {
-        width: 7px;
-        height: 7px;
+        width: 6px;
+        height: 6px;
         border-radius: 50%;
         display: inline-block;
     }
@@ -189,39 +231,41 @@
     .login-header {
         text-align: center;
         margin-bottom: 24px;
-        margin-top: 8px;
+        margin-top: 10px;
     }
 
     .logo-box {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 56px;
-        height: 56px;
-        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-        border: 1px solid #bfdbfe;
-        border-radius: 14px;
+        width: 52px;
+        height: 52px;
+        background-color: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
         margin-bottom: 14px;
-        box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1);
+        color: #475569;
     }
 
-    .logo-icon {
-        font-size: 1.8rem;
+    .header-icon-svg {
+        width: 26px;
+        height: 26px;
     }
 
     .login-header h2 {
         margin: 0 0 6px 0;
-        font-size: 1.45rem;
-        font-weight: 800;
+        font-size: 1.4rem;
+        font-weight: 700;
         color: #0f172a;
         letter-spacing: -0.02em;
     }
 
     .login-header .subtitle {
         margin: 0;
-        font-size: 0.85rem;
+        font-size: 0.82rem;
         color: #64748b;
         line-height: 1.4;
+        font-weight: 500;
     }
 
     .login-form {
@@ -235,7 +279,7 @@
     .form-group label {
         display: block;
         margin-bottom: 6px;
-        font-size: 0.88rem;
+        font-size: 0.82rem;
         font-weight: 600;
         color: #334155;
     }
@@ -246,18 +290,20 @@
         align-items: center;
     }
 
-    .input-icon {
+    /* Icono SVG gris dentro del input */
+    .input-icon-svg {
         position: absolute;
         left: 12px;
-        font-size: 1rem;
-        color: #94a3b8;
+        width: 18px;
+        height: 18px;
+        color: #64748b;
         pointer-events: none;
     }
 
     .form-control {
         width: 100%;
         padding: 11px 40px 11px 38px;
-        font-size: 0.95rem;
+        font-size: 0.92rem;
         font-family: inherit;
         color: #0f172a;
         background-color: #f8fafc;
@@ -271,7 +317,7 @@
         background-color: #ffffff;
         border-color: #2563eb;
         outline: none;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
     }
 
     .form-control:disabled {
@@ -285,14 +331,21 @@
         background: none;
         border: none;
         cursor: pointer;
-        font-size: 1.1rem;
-        padding: 4px 6px;
-        opacity: 0.7;
-        transition: opacity 0.2s;
+        padding: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        transition: color 0.2s;
     }
 
     .btn-toggle-eye:hover {
-        opacity: 1;
+        color: #0f172a;
+    }
+
+    .eye-icon-svg {
+        width: 18px;
+        height: 18px;
     }
 
     .form-options {
@@ -300,7 +353,7 @@
         align-items: center;
         justify-content: space-between;
         margin-bottom: 22px;
-        font-size: 0.85rem;
+        font-size: 0.82rem;
         color: #475569;
     }
 
@@ -310,12 +363,13 @@
         gap: 8px;
         cursor: pointer;
         user-select: none;
+        font-weight: 500;
     }
 
     .checkbox-container input {
         cursor: pointer;
-        width: 16px;
-        height: 16px;
+        width: 15px;
+        height: 15px;
     }
 
     .btn-submit {
@@ -324,26 +378,27 @@
         justify-content: center;
         gap: 10px;
         width: 100%;
-        padding: 13px 20px;
-        font-size: 1rem;
+        padding: 12px 20px;
+        font-size: 0.95rem;
         font-weight: 700;
+        font-family: inherit;
         color: #ffffff;
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        background-color: #2563eb;
         border: none;
         border-radius: 8px;
         cursor: pointer;
         transition: all 0.2s ease;
-        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+        box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
     }
 
     .btn-submit:hover:not(:disabled) {
-        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+        background-color: #1d4ed8;
         transform: translateY(-1px);
-        box-shadow: 0 6px 14px rgba(37, 99, 235, 0.35);
+        box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3);
     }
 
     .btn-submit:disabled {
-        background: #94a3b8;
+        background-color: #94a3b8;
         cursor: not-allowed;
         box-shadow: none;
     }
@@ -355,18 +410,19 @@
         padding: 12px 16px;
         border-radius: 8px;
         margin-bottom: 18px;
-        font-size: 0.88rem;
-        animation: fadeIn 0.3s ease;
+        font-size: 0.85rem;
     }
 
-    .alert-icon {
-        font-size: 1.2rem;
-        line-height: 1;
+    .alert-icon-svg {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+        margin-top: 1px;
     }
 
     .alert strong {
         display: block;
-        font-size: 0.85rem;
+        font-size: 0.82rem;
         margin-bottom: 2px;
     }
 
@@ -381,10 +437,18 @@
         color: #991b1b;
     }
 
+    .alert-danger .alert-icon-svg {
+        color: #dc2626;
+    }
+
     .alert-success {
         background-color: #ecfdf5;
         border: 1px solid #a7f3d0;
         color: #065f46;
+    }
+
+    .alert-success .alert-icon-svg {
+        color: #059669;
     }
 
     .demo-box {
@@ -399,7 +463,7 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        font-size: 0.8rem;
+        font-size: 0.78rem;
         color: #64748b;
         font-weight: 600;
         margin-bottom: 10px;
@@ -407,51 +471,52 @@
 
     .demo-badge {
         background-color: #e2e8f0;
-        color: #334155;
+        color: #475569;
         padding: 2px 6px;
         border-radius: 4px;
-        font-size: 0.7rem;
+        font-size: 0.68rem;
         font-weight: 700;
         text-transform: uppercase;
     }
 
     .demo-buttons {
         display: flex;
-        gap: 6px;
+        gap: 8px;
     }
 
     .btn-demo {
         flex: 1;
-        padding: 6px 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 7px 10px;
         border-radius: 6px;
         border: 1px solid #e2e8f0;
         background-color: #ffffff;
-        font-size: 0.8rem;
+        font-size: 0.78rem;
         font-weight: 600;
-        color: #334155;
+        font-family: inherit;
+        color: #475569;
         cursor: pointer;
         transition: all 0.15s ease;
+    }
+
+    .demo-icon-svg {
+        width: 14px;
+        height: 14px;
+        color: #64748b;
     }
 
     .btn-demo:hover {
         background-color: #f1f5f9;
         border-color: #94a3b8;
+        color: #0f172a;
         transform: translateY(-1px);
     }
 
-    .demo-admin:hover {
-        border-color: #059669;
-        color: #059669;
-    }
-
-    .demo-supervisor:hover {
-        border-color: #d97706;
-        color: #d97706;
-    }
-
-    .demo-ejecutor:hover {
-        border-color: #2563eb;
-        color: #2563eb;
+    .btn-demo:hover .demo-icon-svg {
+        color: #334155;
     }
 
     .spinner-small {
@@ -467,11 +532,6 @@
     @@keyframes spin {
         to { transform: rotate(360deg); }
     }
-
-    @@keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-4px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
 </style>
 
 @code {
@@ -484,7 +544,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Comprobación rápida y silenciosa de la API para encender el indicador
         try
         {
             var res = await ApiClient.CheckHealthAsync();
@@ -513,7 +572,6 @@
         mensajeError = null;
         mensajeExito = null;
 
-        // 1. Validación de campos vacíos en cliente
         if (string.IsNullOrWhiteSpace(loginModel.Username))
         {
             mensajeError = "Por favor, ingrese el nombre de usuario.";
@@ -530,7 +588,6 @@
 
         try
         {
-            // 2. Delegación a AuthApiService
             var resultado = await AuthApi.LoginAsync(loginModel);
 
             if (resultado.Success)
