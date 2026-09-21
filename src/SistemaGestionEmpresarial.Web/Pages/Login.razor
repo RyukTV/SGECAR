@@ -22,7 +22,23 @@
             <h2>Iniciar Sesión</h2>
         </div>
 
-        @if (!string.IsNullOrWhiteSpace(mensajeError))
+        @if (estaBloqueado)
+        {
+            <div class="alert alert-warning" role="alert">
+                <svg class="alert-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                <div>
+                    <strong>Acceso Bloqueado por Seguridad</strong>
+                    <p>Has alcanzado el límite de @MaxIntentosPermitidos intentos fallidos permitidos.</p>
+                    <div class="lockout-timer-pill">
+                        Reintento disponible en: <strong>@(segundosBloqueoRestantes)s</strong>
+                    </div>
+                </div>
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(mensajeError))
         {
             <div class="alert alert-danger" role="alert">
                 <svg class="alert-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -33,6 +49,12 @@
                 <div>
                     <strong>Acceso denegado</strong>
                     <p>@mensajeError</p>
+                    @if (intentosFallidos > 0)
+                    {
+                        <span class="attempts-badge">
+                            Intento fallido @intentosFallidos de @MaxIntentosPermitidos
+                        </span>
+                    }
                 </div>
             </div>
         }
@@ -65,7 +87,7 @@
                            class="form-control" 
                            placeholder="Ingresa tu usuario (ej. admin)" 
                            @bind="loginModel.Username" 
-                           disabled="@cargando" 
+                           disabled="@(cargando || estaBloqueado)" 
                            autocomplete="username" />
                 </div>
             </div>
@@ -83,11 +105,12 @@
                            class="form-control" 
                            placeholder="Ingresa tu contraseña" 
                            @bind="loginModel.Password" 
-                           disabled="@cargando" 
+                           disabled="@(cargando || estaBloqueado)" 
                            autocomplete="current-password" />
                     <button type="button" 
                             class="btn-toggle-eye" 
                             @onclick="ToggleMostrarContrasena" 
+                            disabled="@(cargando || estaBloqueado)" 
                             tabindex="-1"
                             title="@(mostrarContrasena ? "Ocultar" : "Mostrar") contraseña">
                         @if (mostrarContrasena)
@@ -112,16 +135,24 @@
 
             <div class="form-options">
                 <label class="checkbox-container">
-                    <input type="checkbox" @bind="mostrarContrasena" />
+                    <input type="checkbox" @bind="mostrarContrasena" disabled="@(cargando || estaBloqueado)" />
                     <span>Mostrar contraseña</span>
                 </label>
             </div>
 
-            <button type="submit" class="btn btn-submit" disabled="@cargando">
+            <button type="submit" class="btn btn-submit" disabled="@(cargando || estaBloqueado)">
                 @if (cargando)
                 {
                     <span class="spinner-small"></span>
                     <span>Validando credenciales...</span>
+                }
+                else if (estaBloqueado)
+                {
+                    <svg class="btn-lock-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                    <span>Bloqueado temporalmente (@(segundosBloqueoRestantes)s)</span>
                 }
                 else
                 {
@@ -137,20 +168,20 @@
                 <span>Probar con credenciales de prueba:</span>
             </div>
             <div class="demo-buttons">
-                <button type="button" class="btn-demo" @onclick='() => AutoLlenar("admin", "admin123")' title="Rol: Administrador">
+                <button type="button" class="btn-demo" @onclick='() => AutoLlenar("admin", "admin123")' disabled="@(cargando || estaBloqueado)" title="Rol: Administrador">
                     <svg class="demo-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" />
                     </svg>
                     <span>Admin</span>
                 </button>
-                <button type="button" class="btn-demo" @onclick='() => AutoLlenar("supervisor", "supervisor123")' title="Rol: Supervisor">
+                <button type="button" class="btn-demo" @onclick='() => AutoLlenar("supervisor", "supervisor123")' disabled="@(cargando || estaBloqueado)" title="Rol: Supervisor">
                     <svg class="demo-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
                         <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
                     </svg>
                     <span>Supervisor</span>
                 </button>
-                <button type="button" class="btn-demo" @onclick='() => AutoLlenar("ejecutor", "ejecutor123")' title="Rol: Ejecutor">
+                <button type="button" class="btn-demo" @onclick='() => AutoLlenar("ejecutor", "ejecutor123")' disabled="@(cargando || estaBloqueado)" title="Rol: Ejecutor">
                     <svg class="demo-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="3" />
                         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
@@ -442,6 +473,47 @@
         color: #059669;
     }
 
+    .alert-warning {
+        background-color: #fffbeb;
+        border: 1px solid #fde68a;
+        color: #92400e;
+    }
+
+    .alert-warning .alert-icon-svg {
+        color: #d97706;
+    }
+
+    .lockout-timer-pill {
+        display: inline-block;
+        margin-top: 6px;
+        background-color: #fef3c7;
+        color: #b45309;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.76rem;
+        font-weight: 600;
+        border: 1px solid #fcd34d;
+    }
+
+    .attempts-badge {
+        display: inline-block;
+        margin-top: 6px;
+        font-size: 0.74rem;
+        font-weight: 700;
+        background-color: rgba(220, 38, 38, 0.12);
+        color: #991b1b;
+        padding: 2px 8px;
+        border-radius: 4px;
+        border: 1px solid rgba(220, 38, 38, 0.2);
+    }
+
+    .btn-lock-svg {
+        width: 16px;
+        height: 16px;
+        margin-right: 6px;
+        vertical-align: text-bottom;
+    }
+
     .demo-box {
         margin-top: 26px;
         padding: 14px 16px;
@@ -493,6 +565,11 @@
         transition: all 0.15s ease;
     }
 
+    .btn-demo:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
     .demo-icon-svg {
         width: 14px;
         height: 14px;
@@ -533,6 +610,12 @@
     private string? mensajeError;
     private string? mensajeExito;
 
+    // Control de Seguridad: Intentos fallidos controlados (Etapa I)
+    private int intentosFallidos = 0;
+    private const int MaxIntentosPermitidos = 3;
+    private bool estaBloqueado = false;
+    private int segundosBloqueoRestantes = 0;
+
     protected override async Task OnInitializedAsync()
     {
         try
@@ -553,6 +636,7 @@
 
     private void AutoLlenar(string usuario, string clave)
     {
+        if (estaBloqueado) return;
         loginModel.Username = usuario;
         loginModel.Password = clave;
         mensajeError = null;
@@ -560,6 +644,11 @@
 
     private async Task IniciarSesionAsync()
     {
+        if (estaBloqueado)
+        {
+            return;
+        }
+
         mensajeError = null;
         mensajeExito = null;
 
@@ -583,13 +672,25 @@
 
             if (resultado.Success)
             {
+                intentosFallidos = 0;
+                estaBloqueado = false;
                 mensajeExito = resultado.Message ?? "Autenticación exitosa. Redirigiendo...";
                 await Task.Delay(350);
                 Navigation.NavigateTo("/");
             }
             else
             {
-                mensajeError = resultado.Message ?? "Usuario o contraseña incorrectos.";
+                intentosFallidos++;
+
+                if (intentosFallidos >= MaxIntentosPermitidos)
+                {
+                    _ = ActivarBloqueoTemporalAsync(30);
+                }
+                else
+                {
+                    int restantes = MaxIntentosPermitidos - intentosFallidos;
+                    mensajeError = $"{resultado.Message ?? "Usuario o contraseña incorrectos."} Te restan {restantes} {(restantes == 1 ? "intento" : "intentos")} antes del bloqueo.";
+                }
             }
         }
         catch (Exception ex)
@@ -600,5 +701,24 @@
         {
             cargando = false;
         }
+    }
+
+    private async Task ActivarBloqueoTemporalAsync(int segundos = 30)
+    {
+        estaBloqueado = true;
+        segundosBloqueoRestantes = segundos;
+        StateHasChanged();
+
+        while (segundosBloqueoRestantes > 0)
+        {
+            await Task.Delay(1000);
+            segundosBloqueoRestantes--;
+            StateHasChanged();
+        }
+
+        estaBloqueado = false;
+        intentosFallidos = 0;
+        mensajeError = null;
+        StateHasChanged();
     }
 }
