@@ -1,0 +1,18 @@
+@inject NavigationManager Navigation
+
+@code {
+    /// <summary>
+    /// Envía al login al usuario anónimo que intenta abrir una ruta protegida, conservando
+    /// la dirección solicitada para poder volver a ella tras iniciar sesión.
+    /// </summary>
+    protected override void OnInitialized()
+    {
+        var destino = Navigation.ToBaseRelativePath(Navigation.Uri);
+
+        var url = string.IsNullOrWhiteSpace(destino)
+            ? "login"
+            : $"login?volverA={Uri.EscapeDataString(destino)}";
+
+        Navigation.NavigateTo(url, forceLoad: false, replace: true);
+    }
+}

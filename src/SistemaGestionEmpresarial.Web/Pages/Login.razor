@@ -390,6 +390,27 @@
         mostrarContrasena = !mostrarContrasena;
     }
 
+    /// <summary>Ruta protegida que el usuario intentó abrir antes de que se le pidiera iniciar sesión.</summary>
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "volverA")]
+    public string? VolverA { get; set; }
+
+    /// <summary>
+    /// Devuelve al usuario a la ruta que solicitó. Solo se aceptan rutas relativas de la propia
+    /// aplicación, para que el parámetro no pueda usarse como redirección hacia un sitio externo.
+    /// </summary>
+    private string ObtenerDestinoTrasLogin()
+    {
+        if (string.IsNullOrWhiteSpace(VolverA)
+            || VolverA.StartsWith('/')
+            || VolverA.Contains("://", StringComparison.Ordinal))
+        {
+            return "/";
+        }
+
+        return VolverA;
+    }
+
     private async Task IniciarSesionAsync()
     {
 
@@ -418,7 +439,7 @@
             {
                 mensajeExito = resultado.Message ?? "Autenticación exitosa. Redirigiendo...";
                 await Task.Delay(350);
-                Navigation.NavigateTo("/");
+                Navigation.NavigateTo(ObtenerDestinoTrasLogin(), forceLoad: false, replace: true);
             }
             else
             {

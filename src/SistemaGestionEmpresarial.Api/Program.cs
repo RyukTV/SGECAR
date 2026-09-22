@@ -2,6 +2,8 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using SistemaGestionEmpresarial.Api.Authorization;
 using SistemaGestionEmpresarial.Api.Data;
 using SistemaGestionEmpresarial.Api.Services;
 
@@ -9,7 +11,28 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+// Swagger con soporte de JWT: los endpoints protegidos solo pueden probarse enviando el token.
+builder.Services.AddSwaggerGen(options =>
+{
+    var esquemaJwt = new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Pegue aquí el token devuelto por api/auth/login.",
+        Reference = new OpenApiReference
+        {
+            Type = ReferenceType.SecurityScheme,
+            Id = JwtBearerDefaults.AuthenticationScheme
+        }
+    };
+
+    options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, esquemaJwt);
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement { [esquemaJwt] = Array.Empty<string>() });
+});
 
 // Base de Datos (Gestionada por el compañero de equipo)
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -18,6 +41,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Servicio de Autenticación
 builder.Services.AddScoped<IAuthService, AuthService>();
+
+// Operaciones de la Etapa I, protegidas por permiso
+builder.Services.AddScoped<IOperacionesService, OperacionesService>();
 
 // Configuración de Autenticación y JWT
 var jwtKey = builder.Configuration["Jwt:Key"]
@@ -40,7 +66,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+// Control de acceso por rol: una política por permiso y denegación por omisión.
+builder.Services.AddAutorizacionPorPermisos();
 
 const string developmentCorsPolicy = "BlazorDevelopment";
 builder.Services.AddCors(options =>
@@ -63,6 +90,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors(developmentCorsPolicy);
+
+// Antes de la autorización: convierte en 403 las denegaciones lanzadas desde los Services.
+app.UseMiddleware<MiddlewareDePermisoDenegado>();
+
 app.UseAuthentication();
 app.UseAuthorization();
 

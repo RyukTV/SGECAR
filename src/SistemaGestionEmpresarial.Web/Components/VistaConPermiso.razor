@@ -1,0 +1,27 @@
+@* Muestra su contenido solo si el rol del usuario tiene el permiso indicado.
+   Es azúcar sobre AuthorizeView para no repetir el nombre de la política en cada vista. *@
+
+@* El contexto se nombra explícitamente para poder anidar este componente dentro de otro
+   AuthorizeView sin que los nombres de contexto colisionen. *@
+<AuthorizeView Policy="@PoliticasDePermiso.Nombre(Permiso)" Context="estadoDeSesion">
+    <Authorized>
+        @ChildContent
+    </Authorized>
+    <NotAuthorized>
+        @SinPermiso
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    /// <summary>Permiso exigido, tomado de <see cref="Permisos" />.</summary>
+    [Parameter, EditorRequired]
+    public string Permiso { get; set; } = string.Empty;
+
+    /// <summary>Contenido visible cuando el rol tiene el permiso.</summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Contenido alternativo cuando el rol no lo tiene. Si se omite, no se muestra nada.</summary>
+    [Parameter]
+    public RenderFragment? SinPermiso { get; set; }
+}

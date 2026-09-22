@@ -6,6 +6,9 @@
 *.suo
 .vscode/
 
+# Archivos de asistentes de IA (locales de cada integrante)
+CLAUDE.md
+
 # Archivos locales, temporales y secretos
 .env
 .env.*

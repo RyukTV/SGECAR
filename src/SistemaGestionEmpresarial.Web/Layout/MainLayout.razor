@@ -28,6 +28,28 @@
                 <span>Inicio</span>
             </NavLink>
 
+            @* Estas entradas solo aparecen si el rol tiene el permiso correspondiente.
+               El menú refleja los permisos; no los sustituye: la API los vuelve a exigir. *@
+            <VistaConPermiso Permiso="@Permisos.Consultar">
+                <NavLink href="operaciones" class="nav-item">
+                    <svg class="icon-svg nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 11H3v10h6zM15 3H9v18h6zM21 7h-6v14h6z" />
+                    </svg>
+                    <span>Operaciones</span>
+                </NavLink>
+            </VistaConPermiso>
+
+            <VistaConPermiso Permiso="@Permisos.GestionarUsuarios">
+                <NavLink href="administracion" class="nav-item">
+                    <svg class="icon-svg nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                    <span>Administración</span>
+                </NavLink>
+            </VistaConPermiso>
+
             <NavLink href="api-status" class="nav-item">
                 <svg class="icon-svg nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
