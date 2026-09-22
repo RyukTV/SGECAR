@@ -75,7 +75,8 @@ public sealed class AuthApiService
         }
         catch (HttpRequestException ex)
         {
-            return LoginResponse.Fail($"No se pudo conectar con la API (http://localhost:5080). Detalle: {ex.Message}");
+            Console.Error.WriteLine($"Error de conexión con la API: {ex}");
+            return LoginResponse.Fail("No fue posible comunicarse con el servicio de autenticación.");
         }
         catch (TaskCanceledException)
         {
@@ -83,7 +84,8 @@ public sealed class AuthApiService
         }
         catch (Exception ex)
         {
-            return LoginResponse.Fail($"Ocurrió un error inesperado: {ex.Message}");
+            Console.Error.WriteLine($"Error inesperado durante la autenticación: {ex}");
+            return LoginResponse.Fail("Ocurrió un error inesperado durante la autenticación.");
         }
     }
 
