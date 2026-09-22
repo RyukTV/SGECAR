@@ -124,7 +124,7 @@ public class AuthService : IAuthService
     private string GenerarTokenJwt(Usuario user)
     {
         var jwtKey = _configuration["Jwt:Key"]
-            ?? throw new InvalidOperationException("Falta la configuración Jwt:Key en appsettings.json.");
+            ?? throw new InvalidOperationException("Falta la configuración Jwt:Key.");
         var jwtIssuer = _configuration["Jwt:Issuer"] ?? "SistemaGestionEmpresarial.Api";
         var jwtAudience = _configuration["Jwt:Audience"] ?? "SistemaGestionEmpresarial.Web";
         var expiryMinutes = _configuration.GetValue<int>("Jwt:ExpiresInMinutes", 120);
@@ -140,7 +140,6 @@ public class AuthService : IAuthService
             new Claim(ClaimTypes.Name, user.NombreUsuario),
             new Claim(ClaimTypes.GivenName, user.NombreCompleto),
             new Claim(ClaimTypes.Role, user.Rol.Nombre),
-            new Claim(ClaimTypes.Email, $"{user.NombreUsuario}@sgecar.com"),
             new Claim("rol", user.Rol.Nombre),
             new Claim("usuario", user.NombreUsuario)
         };
