@@ -13,7 +13,7 @@ namespace SistemaGestionEmpresarial.Api.Services;
 public class AuthService : IAuthService
 {
     private const int MaxIntentosPermitidos = 3;
-    private const int MinutosBloqueo = 5;
+    private const int MinutosBloqueo = 1;
 
     private readonly IConfiguration _configuration;
     private readonly ILogger<AuthService> _logger;
@@ -60,7 +60,7 @@ public class AuthService : IAuthService
             {
                 var minutosRestantes = Math.Ceiling((user.BloqueadoHasta.Value - DateTime.UtcNow).TotalMinutes);
                 _logger.LogWarning("Intento de login fallido: usuario '{Username}' bloqueado temporalmente hasta {BloqueadoHasta}.", user.NombreUsuario, user.BloqueadoHasta.Value);
-                return LoginResponse.Fail($"El usuario se encuentra bloqueado temporalmente por seguridad. Intente nuevamente en {minutosRestantes} minuto(s).");
+                return LoginResponse.Fail($"El usuario se encuentra bloqueado temporalmente por seguridad. Intente nuevamente en {minutosRestantes} {(minutosRestantes == 1 ? "minuto" : "minutos")}.");
             }
             else
             {
@@ -89,7 +89,7 @@ public class AuthService : IAuthService
 
             if (user.BloqueadoHasta.HasValue && user.BloqueadoHasta.Value > DateTime.UtcNow)
             {
-                return LoginResponse.Fail($"Ha superado el límite de {MaxIntentosPermitidos} intentos fallidos permitidos. Su acceso ha sido bloqueado temporalmente por {MinutosBloqueo} minutos.");
+                return LoginResponse.Fail($"Ha superado el límite de {MaxIntentosPermitidos} intentos fallidos permitidos. Su acceso ha sido bloqueado temporalmente por {MinutosBloqueo} minuto.");
             }
 
             var restantes = MaxIntentosPermitidos - user.IntentosFallidos;
