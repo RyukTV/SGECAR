@@ -13,12 +13,12 @@ set "PATH=%USERPROFILE%\.dotnet;%PATH%"
 echo [2/3] Levantando Backend API (http://localhost:5080)...
 start "SGECAR - Backend API" cmd /k "title SGECAR - API && set PATH=%USERPROFILE%\.dotnet;%%PATH%% && dotnet run --project src\SistemaGestionEmpresarial.Api --launch-profile http"
 
-timeout /t 3 /nobreak >nul
+ping 127.0.0.1 -n 4 >nul
 
 echo [3/3] Levantando Frontend Blazor (http://localhost:5180)...
 start "SGECAR - Frontend Blazor" cmd /k "title SGECAR - Blazor Web && set PATH=%USERPROFILE%\.dotnet;%%PATH%% && dotnet run --project src\SistemaGestionEmpresarial.Web --launch-profile http"
 
-timeout /t 3 /nobreak >nul
+ping 127.0.0.1 -n 4 >nul
 
 echo.
 echo =======================================================
@@ -28,5 +28,5 @@ start http://localhost:5180
 
 echo.
 echo Para detener los servicios ejecuta "detener.bat" o cierra las ventanas.
-timeout /t 4 >nul
+ping 127.0.0.1 -n 4 >nul
 popd
