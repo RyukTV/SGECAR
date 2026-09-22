@@ -137,9 +137,12 @@ public class AuthService : IAuthService
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim("usuario", user.NombreUsuario),
-            new Claim(ClaimTypes.Name, user.NombreCompleto),
-            new Claim(ClaimTypes.Role, user.Rol.Nombre)
+            new Claim(ClaimTypes.Name, user.NombreUsuario),
+            new Claim(ClaimTypes.GivenName, user.NombreCompleto),
+            new Claim(ClaimTypes.Role, user.Rol.Nombre),
+            new Claim(ClaimTypes.Email, $"{user.NombreUsuario}@sgecar.com"),
+            new Claim("rol", user.Rol.Nombre),
+            new Claim("usuario", user.NombreUsuario)
         };
 
         var token = new JwtSecurityToken(
