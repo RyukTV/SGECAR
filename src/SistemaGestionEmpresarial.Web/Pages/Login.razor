@@ -153,36 +153,6 @@
                 }
             </button>
         </form>
-
-        <!-- Accesos rápidos modernos con iconos SVG en gris -->
-        <div class="demo-box">
-            <div class="demo-header">
-                <span class="demo-badge">Demo</span>
-                <span>Probar con credenciales de prueba:</span>
-            </div>
-            <div class="demo-buttons">
-                <button type="button" class="btn-demo" @onclick='() => AutoLlenar("admin", "admin123")' disabled="@(cargando || estaBloqueado)" title="Rol: Administrador">
-                    <svg class="demo-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" />
-                    </svg>
-                    <span>Admin</span>
-                </button>
-                <button type="button" class="btn-demo" @onclick='() => AutoLlenar("supervisor", "supervisor123")' disabled="@(cargando || estaBloqueado)" title="Rol: Supervisor">
-                    <svg class="demo-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
-                    </svg>
-                    <span>Supervisor</span>
-                </button>
-                <button type="button" class="btn-demo" @onclick='() => AutoLlenar("ejecutor", "ejecutor123")' disabled="@(cargando || estaBloqueado)" title="Rol: Ejecutor">
-                    <svg class="demo-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="3" />
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                    </svg>
-                    <span>Ejecutor</span>
-                </button>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -463,79 +433,6 @@
         vertical-align: text-bottom;
     }
 
-    .demo-box {
-        margin-top: 26px;
-        padding: 14px 16px;
-        background-color: #f8fafc;
-        border: 1px dashed #cbd5e1;
-        border-radius: 10px;
-    }
-
-    .demo-header {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.78rem;
-        color: #64748b;
-        font-weight: 600;
-        margin-bottom: 10px;
-    }
-
-    .demo-badge {
-        background-color: #e2e8f0;
-        color: #475569;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 0.68rem;
-        font-weight: 700;
-        text-transform: uppercase;
-    }
-
-    .demo-buttons {
-        display: flex;
-        gap: 8px;
-    }
-
-    .btn-demo {
-        flex: 1;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        padding: 7px 10px;
-        border-radius: 6px;
-        border: 1px solid #e2e8f0;
-        background-color: #ffffff;
-        font-size: 0.78rem;
-        font-weight: 600;
-        font-family: inherit;
-        color: #475569;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-
-    .btn-demo:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    .demo-icon-svg {
-        width: 14px;
-        height: 14px;
-        color: #64748b;
-    }
-
-    .btn-demo:hover {
-        background-color: #f1f5f9;
-        border-color: #94a3b8;
-        color: #0f172a;
-        transform: translateY(-1px);
-    }
-
-    .btn-demo:hover .demo-icon-svg {
-        color: #334155;
-    }
-
     .spinner-small {
         width: 16px;
         height: 16px;
@@ -567,14 +464,6 @@
     private void ToggleMostrarContrasena()
     {
         mostrarContrasena = !mostrarContrasena;
-    }
-
-    private void AutoLlenar(string usuario, string clave)
-    {
-        if (estaBloqueado) return;
-        loginModel.Username = usuario;
-        loginModel.Password = clave;
-        mensajeError = null;
     }
 
     private async Task IniciarSesionAsync()
@@ -615,22 +504,27 @@
             }
             else
             {
-                intentosFallidos++;
+                mensajeError = resultado.Message ?? "Usuario o contraseña incorrectos.";
 
-                if (intentosFallidos >= MaxIntentosPermitidos)
+                // Si la API indica que el usuario está bloqueado por tiempo, activar bloqueo visual
+                if (mensajeError.Contains("bloqueado"))
                 {
-                    _ = ActivarBloqueoTemporalAsync(30);
+                    _ = ActivarBloqueoTemporalAsync(60);
                 }
                 else
                 {
-                    int restantes = MaxIntentosPermitidos - intentosFallidos;
-                    mensajeError = $"{resultado.Message ?? "Usuario o contraseña incorrectos."} Te restan {restantes} {(restantes == 1 ? "intento" : "intentos")} antes del bloqueo.";
+                    intentosFallidos++;
+                    if (intentosFallidos >= MaxIntentosPermitidos)
+                    {
+                        _ = ActivarBloqueoTemporalAsync(30);
+                    }
                 }
             }
         }
         catch (Exception ex)
         {
-            mensajeError = $"Error de comunicación con el servicio: {ex.Message}";
+            Console.Error.WriteLine($"Error de autenticación: {ex}");
+            mensajeError = "No fue posible comunicarse con el servicio de autenticación. Verifique su conexión o intente más tarde.";
         }
         finally
         {

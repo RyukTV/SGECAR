@@ -21,7 +21,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Configuración de Autenticación y JWT
 var jwtKey = builder.Configuration["Jwt:Key"]
-    ?? "SGECAR_SuperSecret_Jwt_Security_Key_2026_ISO615_Development_Only!";
+    ?? throw new InvalidOperationException("Falta la clave de seguridad Jwt:Key en la configuración.");
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "SistemaGestionEmpresarial.Api";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "SistemaGestionEmpresarial.Web";
 
