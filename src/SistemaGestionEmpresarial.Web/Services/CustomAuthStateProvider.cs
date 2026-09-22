@@ -9,7 +9,6 @@ namespace SistemaGestionEmpresarial.Web.Services;
 public class CustomAuthStateProvider : AuthenticationStateProvider
 {
     private const string TokenStorageKey = "sgecar_auth_token";
-    private const string UserStorageKey = "sgecar_auth_user";
 
     private readonly IJSRuntime _jsRuntime;
     private readonly HttpClient _httpClient;
@@ -44,7 +43,6 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
                 if (expirationTime <= DateTimeOffset.UtcNow)
                 {
                     await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", TokenStorageKey);
-                    await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", UserStorageKey);
                     _httpClient.DefaultRequestHeaders.Authorization = null;
                     return _anonymousState;
                 }
@@ -79,7 +77,6 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
     public async Task SetLoggedOutAsync()
     {
         await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", TokenStorageKey);
-        await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", UserStorageKey);
 
         _httpClient.DefaultRequestHeaders.Authorization = null;
 
