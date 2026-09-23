@@ -1,0 +1,327 @@
+@page "/operaciones"
+@attribute [Authorize(Policy = PoliticasDePermiso.Consultar)]
+@inject PermisosApiService PermisosApi
+
+<PageTitle>Operaciones - SGECAR</PageTitle>
+
+<AuthorizeView Context="sesion">
+    <div class="operaciones-wrapper">
+        <header class="operaciones-header">
+            <div>
+                <h1>Operaciones</h1>
+                <p>
+                    Cada acción se habilita según su rol y, además, vuelve a verificarse en la API.
+                    Use <strong>Forzar</strong> para comprobar que el servidor rechaza por su cuenta
+                    lo que su rol no permite, aunque el botón esté oculto.
+                </p>
+            </div>
+            <div class="rol-actual">
+                <span class="rol-etiqueta">Rol activo</span>
+                <span class="rol-valor">@(sesion.User.ObtenerRol() ?? "Desconocido")</span>
+                <span class="rol-permisos">
+                    @if (permisosDelServidor is null)
+                    {
+                        <text>Consultando permisos…</text>
+                    }
+                    else
+                    {
+                        <text>Permisos según la API: @string.Join(", ", permisosDelServidor)</text>
+                    }
+                </span>
+            </div>
+        </header>
+
+        <div class="acciones-grid">
+            @foreach (var accion in Acciones)
+            {
+                <article class="accion-card">
+                    <div class="accion-top">
+                        <h2>@accion.Titulo</h2>
+                        <VistaConPermiso Permiso="@accion.Permiso">
+                            <ChildContent>
+                                <span class="badge permitido">Permitido</span>
+                            </ChildContent>
+                            <SinPermiso>
+                                <span class="badge bloqueado">Bloqueado</span>
+                            </SinPermiso>
+                        </VistaConPermiso>
+                    </div>
+
+                    <p class="accion-desc">@accion.Descripcion</p>
+
+                    <div class="accion-botones">
+                        <VistaConPermiso Permiso="@accion.Permiso">
+                            <ChildContent>
+                                <button class="btn btn-primario"
+                                        disabled="@(operacionEnCurso == accion.Permiso)"
+                                        @onclick="() => EjecutarAsync(accion.Permiso)">
+                                    @(operacionEnCurso == accion.Permiso ? "Enviando…" : "Ejecutar")
+                                </button>
+                            </ChildContent>
+                            <SinPermiso>
+                                <button class="btn btn-primario" disabled title="Su rol no permite esta acción">
+                                    Ejecutar
+                                </button>
+                            </SinPermiso>
+                        </VistaConPermiso>
+
+                        @* Deliberadamente sin comprobar permisos: sirve para demostrar que la
+                           autorización real ocurre en el backend y no en la interfaz. *@
+                        <button class="btn btn-secundario"
+                                disabled="@(operacionEnCurso == accion.Permiso)"
+                                @onclick="() => EjecutarAsync(accion.Permiso)">
+                            Forzar llamada a la API
+                        </button>
+                    </div>
+
+                    @if (resultados.TryGetValue(accion.Permiso, out var resultado))
+                    {
+                        <div class="resultado @(resultado.Autorizada ? "resultado-ok" : "resultado-error")" role="status">
+                            <strong>@(resultado.Autorizada ? "Aceptada" : "Rechazada")</strong>
+                            @if (resultado.CodigoHttp is not null)
+                            {
+                                <span class="codigo-http">HTTP @resultado.CodigoHttp</span>
+                            }
+                            <p>@resultado.Mensaje</p>
+                        </div>
+                    }
+                </article>
+            }
+        </div>
+    </div>
+</AuthorizeView>
+
+<style>
+    .operaciones-wrapper {
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    .operaciones-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 24px;
+        flex-wrap: wrap;
+        margin-bottom: 28px;
+    }
+
+    .operaciones-header h1 {
+        margin: 0 0 8px;
+        font-size: 1.6rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--color-text-primary);
+    }
+
+    .operaciones-header p {
+        margin: 0;
+        max-width: 620px;
+        color: var(--color-text-secondary);
+        line-height: 1.55;
+        font-size: 0.92rem;
+    }
+
+    .rol-actual {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 12px 18px;
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 10px;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .rol-etiqueta {
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--color-text-muted);
+    }
+
+    .rol-valor {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--color-text-primary);
+    }
+
+    .rol-permisos {
+        font-size: 0.75rem;
+        color: var(--color-text-muted);
+        max-width: 320px;
+    }
+
+    .acciones-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 18px;
+    }
+
+    .accion-card {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 20px;
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 12px;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .accion-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .accion-top h2 {
+        margin: 0;
+        font-size: 1.02rem;
+        font-weight: 700;
+        color: var(--color-text-primary);
+    }
+
+    .badge {
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 4px 10px;
+        border-radius: 999px;
+        white-space: nowrap;
+    }
+
+    .badge.permitido {
+        color: var(--color-success-hover);
+        background-color: var(--color-success-light);
+        border: 1px solid var(--color-success-border);
+    }
+
+    .badge.bloqueado {
+        color: var(--color-danger-hover);
+        background-color: var(--color-danger-light);
+        border: 1px solid var(--color-danger-border);
+    }
+
+    .accion-desc {
+        margin: 0;
+        font-size: 0.86rem;
+        color: var(--color-text-secondary);
+        line-height: 1.5;
+    }
+
+    .accion-botones {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 4px;
+    }
+
+    .btn {
+        padding: 8px 14px;
+        border-radius: 6px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .btn-primario {
+        background-color: var(--color-primary);
+        color: #ffffff;
+        border: 1px solid var(--color-primary);
+    }
+
+    .btn-primario:hover:not(:disabled) {
+        background-color: var(--color-primary-hover);
+    }
+
+    .btn-secundario {
+        background-color: transparent;
+        color: var(--color-text-secondary);
+        border: 1px solid var(--color-border-subtle);
+    }
+
+    .btn-secundario:hover:not(:disabled) {
+        background-color: var(--color-surface-hover);
+        color: var(--color-text-primary);
+    }
+
+    .resultado {
+        margin-top: 4px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-size: 0.82rem;
+        line-height: 1.45;
+    }
+
+    .resultado p {
+        margin: 4px 0 0;
+    }
+
+    .resultado-ok {
+        background-color: var(--color-success-light);
+        border: 1px solid var(--color-success-border);
+        color: #065f46;
+    }
+
+    .resultado-error {
+        background-color: var(--color-danger-light);
+        border: 1px solid var(--color-danger-border);
+        color: #991b1b;
+    }
+
+    .codigo-http {
+        margin-left: 8px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        opacity: 0.75;
+    }
+</style>
+
+@code {
+    private static readonly AccionDeOperacion[] Acciones =
+    {
+        new(Permisos.Consultar, "Consultar", "Visualizar los registros del sistema. Permitido a los tres roles."),
+        new(Permisos.Agregar, "Agregar", "Crear nuevos registros. Permitido al Administrador y al Ejecutor."),
+        new(Permisos.Modificar, "Modificar", "Editar registros existentes. Permitido al Administrador y al Supervisor."),
+        new(Permisos.Eliminar, "Eliminar", "Borrar registros de forma definitiva. Solo el Administrador.")
+    };
+
+    private readonly Dictionary<string, ResultadoDeOperacion> resultados = new();
+
+    private IReadOnlyList<string>? permisosDelServidor;
+    private string? operacionEnCurso;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var respuesta = await PermisosApi.ObtenerMisPermisosAsync();
+        permisosDelServidor = respuesta?.Permisos ?? Array.Empty<string>();
+    }
+
+    private async Task EjecutarAsync(string permiso)
+    {
+        operacionEnCurso = permiso;
+        resultados.Remove(permiso);
+
+        try
+        {
+            resultados[permiso] = await PermisosApi.EjecutarOperacionAsync(permiso);
+        }
+        finally
+        {
+            operacionEnCurso = null;
+        }
+    }
+
+    private sealed record AccionDeOperacion(string Permiso, string Titulo, string Descripcion);
+}
