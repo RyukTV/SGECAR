@@ -1,0 +1,102 @@
+@* Mensaje único de "permisos insuficientes". Se reutiliza en el router, en la página
+   /acceso-denegado y en cualquier vista que reciba un 403 de la API. *@
+
+<div class="denegado-card" role="alert">
+    <div class="denegado-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+    </div>
+
+    <h2>Permisos insuficientes</h2>
+
+    <p class="denegado-mensaje">@Mensaje</p>
+
+    @if (!string.IsNullOrWhiteSpace(Rol))
+    {
+        <p class="denegado-detalle">
+            Sesión iniciada como <strong>@Rol</strong>.
+            Si necesita este acceso, solicítelo a un Administrador.
+        </p>
+    }
+
+    <div class="denegado-acciones">
+        <a href="/" class="btn-volver">Volver al inicio</a>
+    </div>
+</div>
+
+<style>
+    .denegado-card {
+        max-width: 520px;
+        margin: 48px auto;
+        padding: 32px;
+        text-align: center;
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-danger-border);
+        border-radius: 12px;
+        box-shadow: var(--shadow-md);
+    }
+
+    .denegado-icon {
+        width: 56px;
+        height: 56px;
+        margin: 0 auto 16px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--color-danger-light);
+        color: var(--color-danger-hover);
+    }
+
+    .denegado-icon svg {
+        width: 26px;
+        height: 26px;
+    }
+
+    .denegado-card h2 {
+        margin: 0 0 12px;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--color-text-primary);
+    }
+
+    .denegado-mensaje {
+        margin: 0 0 8px;
+        color: var(--color-text-secondary);
+        line-height: 1.55;
+    }
+
+    .denegado-detalle {
+        margin: 0 0 24px;
+        font-size: 0.85rem;
+        color: var(--color-text-muted);
+    }
+
+    .btn-volver {
+        display: inline-block;
+        padding: 10px 20px;
+        border-radius: 6px;
+        background-color: var(--color-primary);
+        color: #ffffff;
+        text-decoration: none;
+        font-size: 0.88rem;
+        font-weight: 600;
+        transition: background-color 0.2s ease;
+    }
+
+    .btn-volver:hover {
+        background-color: var(--color-primary-hover);
+    }
+</style>
+
+@code {
+    /// <summary>Texto explicativo. Por omisión, el mensaje genérico de acceso denegado.</summary>
+    [Parameter]
+    public string Mensaje { get; set; } = "No cuenta con los permisos necesarios para acceder a esta sección.";
+
+    /// <summary>Rol del usuario, si se conoce, para explicarle por qué se le negó el acceso.</summary>
+    [Parameter]
+    public string? Rol { get; set; }
+}
