@@ -1,0 +1,186 @@
+@page "/administracion"
+@attribute [Authorize(Policy = PoliticasDePermiso.GestionarRoles)]
+@inject PermisosApiService PermisosApi
+
+<PageTitle>Administración - SGECAR</PageTitle>
+
+<div class="admin-wrapper">
+    <header class="admin-header">
+        <h1>Administración de usuarios y roles</h1>
+        <p>
+            Sección reservada a los roles con permiso de gestión. La matriz proviene de la API,
+            no del navegador: es la misma que el servidor aplica al autorizar cada operación.
+        </p>
+    </header>
+
+    @if (cargando)
+    {
+        <p class="estado" role="status">Cargando la matriz de permisos…</p>
+    }
+    else if (catalogo is null)
+    {
+        <div class="estado estado-error" role="alert">
+            No fue posible obtener la matriz de permisos. Verifique que la API esté disponible
+            y que su rol conserve el permiso de gestión de roles.
+        </div>
+    }
+    else
+    {
+        <div class="tabla-scroll">
+            <table class="tabla-permisos">
+                <thead>
+                    <tr>
+                        <th scope="col">Rol</th>
+                        @foreach (var permiso in Permisos.Todos)
+                        {
+                            <th scope="col">@permiso</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var fila in catalogo)
+                    {
+                        <tr>
+                            <th scope="row">@fila.Rol</th>
+                            @foreach (var permiso in Permisos.Todos)
+                            {
+                                var concedido = fila.Permisos.Contains(permiso);
+                                <td class="@(concedido ? "si" : "no")">
+                                    <span title="@(concedido ? $"{fila.Rol} puede {Permisos.Describir(permiso)}" : $"{fila.Rol} no puede {Permisos.Describir(permiso)}")">
+                                        @(concedido ? "Sí" : "No")
+                                    </span>
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <p class="nota">
+            Esta vista demuestra la autorización y consulta la matriz real almacenada en SQL Server.
+            El CRUD para crear y editar usuarios y roles se implementará como una funcionalidad
+            separada, reutilizando <code>GestionarUsuarios</code> y <code>GestionarRoles</code>.
+        </p>
+    }
+</div>
+
+<style>
+    .admin-wrapper {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .admin-header h1 {
+        margin: 0 0 8px;
+        font-size: 1.6rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--color-text-primary);
+    }
+
+    .admin-header p {
+        margin: 0 0 24px;
+        max-width: 640px;
+        color: var(--color-text-secondary);
+        line-height: 1.55;
+        font-size: 0.92rem;
+    }
+
+    .estado {
+        padding: 14px 16px;
+        border-radius: 8px;
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-border);
+        color: var(--color-text-secondary);
+        font-size: 0.88rem;
+    }
+
+    .estado-error {
+        background-color: var(--color-danger-light);
+        border-color: var(--color-danger-border);
+        color: #991b1b;
+    }
+
+    .tabla-scroll {
+        overflow-x: auto;
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 12px;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .tabla-permisos {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+    }
+
+    .tabla-permisos th,
+    .tabla-permisos td {
+        padding: 12px 14px;
+        text-align: left;
+        border-bottom: 1px solid var(--color-border);
+        white-space: nowrap;
+    }
+
+    .tabla-permisos thead th {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-text-muted);
+        background-color: var(--color-surface-hover);
+    }
+
+    .tabla-permisos tbody th {
+        font-weight: 700;
+        color: var(--color-text-primary);
+    }
+
+    .tabla-permisos tbody tr:last-child th,
+    .tabla-permisos tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .tabla-permisos td.si {
+        color: var(--color-success-hover);
+        font-weight: 700;
+    }
+
+    .tabla-permisos td.no {
+        color: var(--color-text-muted);
+    }
+
+    .nota {
+        margin-top: 18px;
+        font-size: 0.82rem;
+        color: var(--color-text-muted);
+        line-height: 1.55;
+    }
+
+    .nota code {
+        padding: 1px 5px;
+        border-radius: 4px;
+        background-color: var(--color-surface-hover);
+        border: 1px solid var(--color-border);
+        font-size: 0.78rem;
+    }
+</style>
+
+@code {
+    private IReadOnlyList<RolPermisosResponse>? catalogo;
+    private bool cargando = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            catalogo = await PermisosApi.ObtenerCatalogoAsync();
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+}

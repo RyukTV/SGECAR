@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using SistemaGestionEmpresarial.Api.Data;
 using SistemaGestionEmpresarial.Api.Entities;
 using SistemaGestionEmpresarial.Contracts;
+using SistemaGestionEmpresarial.Contracts.Autorizacion;
 
 namespace SistemaGestionEmpresarial.Api.Services;
 
@@ -132,17 +133,24 @@ public class AuthService : IAuthService
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-        var claims = new[]
+        var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.NombreUsuario),
-            new Claim(ClaimTypes.GivenName, user.NombreCompleto),
-            new Claim(ClaimTypes.Role, user.Rol.Nombre),
-            new Claim("rol", user.Rol.Nombre),
-            new Claim("usuario", user.NombreUsuario)
+            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new(ClaimTypes.Name, user.NombreUsuario),
+            new(ClaimTypes.GivenName, user.NombreCompleto),
+            new(ClaimTypes.Role, user.Rol.Nombre),
+            new("rol", user.Rol.Nombre),
+            new("usuario", user.NombreUsuario)
         };
+
+        if (user.Rol.PuedeConsultar) claims.Add(new Claim(Permisos.ClaimType, Permisos.Consultar));
+        if (user.Rol.PuedeAgregar) claims.Add(new Claim(Permisos.ClaimType, Permisos.Agregar));
+        if (user.Rol.PuedeModificar) claims.Add(new Claim(Permisos.ClaimType, Permisos.Modificar));
+        if (user.Rol.PuedeEliminar) claims.Add(new Claim(Permisos.ClaimType, Permisos.Eliminar));
+        if (user.Rol.PuedeGestionarUsuarios) claims.Add(new Claim(Permisos.ClaimType, Permisos.GestionarUsuarios));
+        if (user.Rol.PuedeGestionarRoles) claims.Add(new Claim(Permisos.ClaimType, Permisos.GestionarRoles));
 
         var token = new JwtSecurityToken(
             issuer: jwtIssuer,

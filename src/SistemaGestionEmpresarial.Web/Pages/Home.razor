@@ -3,16 +3,16 @@
 <PageTitle>Inicio - SGECAR</PageTitle>
 
 <div class="dashboard-wrapper">
-    <AuthorizeView>
+    <AuthorizeView Context="sesion">
         <Authorized>
             <!-- Banner de Bienvenida Moderno -->
             <div class="hero-welcome">
                 <div class="hero-info">
                     <span class="greeting-badge">Sesión Activa</span>
-                    <h1>¡Hola, @context.User.Identity?.Name!</h1>
+                    <h1>¡Hola, @sesion.User.Identity?.Name!</h1>
                     <p class="hero-sub">
-                        Autenticado con éxito en el Sistema de Gestión Empresarial. Tu nivel de acceso actual es: 
-                        <span class="role-pill">@(context.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Usuario")</span>
+                        Autenticado con éxito en el Sistema de Gestión Empresarial. Tu nivel de acceso actual es:
+                        <span class="role-pill">@(sesion.User.ObtenerRol() ?? "Usuario")</span>
                     </p>
                 </div>
             </div>
@@ -25,7 +25,7 @@
 
             <div class="cards-grid">
                 <!-- Tarjeta Consultar -->
-                <div class="perm-card card-active">
+                <div class="perm-card @ClaseDeTarjeta(sesion, Permisos.Consultar)">
                     <div class="card-icon icon-neutral">
                         <svg class="card-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="11" cy="11" r="8" />
@@ -35,12 +35,12 @@
                     <div class="card-content">
                         <h3>1. Consultar</h3>
                         <p>Búsqueda y visualización de registros empresariales.</p>
-                        <span class="status-badge allowed">✓ Permitido</span>
+                        @RenderEstado(sesion, Permisos.Consultar)
                     </div>
                 </div>
 
                 <!-- Tarjeta Agregar -->
-                <div class="perm-card @(context.User.IsInRole("Administrador") || context.User.IsInRole("Ejecutor") ? "card-active" : "card-disabled")">
+                <div class="perm-card @ClaseDeTarjeta(sesion, Permisos.Agregar)">
                     <div class="card-icon icon-neutral">
                         <svg class="card-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="12" y1="5" x2="12" y2="19" />
@@ -50,19 +50,12 @@
                     <div class="card-content">
                         <h3>2. Agregar</h3>
                         <p>Creación de nuevos registros empresariales.</p>
-                        @if (context.User.IsInRole("Administrador") || context.User.IsInRole("Ejecutor"))
-                        {
-                            <span class="status-badge allowed">✓ Permitido</span>
-                        }
-                        else
-                        {
-                            <span class="status-badge denied">✕ Bloqueado (Supervisor no puede agregar)</span>
-                        }
+                        @RenderEstado(sesion, Permisos.Agregar)
                     </div>
                 </div>
 
                 <!-- Tarjeta Modificar -->
-                <div class="perm-card @(context.User.IsInRole("Administrador") || context.User.IsInRole("Supervisor") ? "card-active" : "card-disabled")">
+                <div class="perm-card @ClaseDeTarjeta(sesion, Permisos.Modificar)">
                     <div class="card-icon icon-neutral">
                         <svg class="card-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
@@ -71,19 +64,12 @@
                     <div class="card-content">
                         <h3>3. Modificar</h3>
                         <p>Edición y actualización de datos existentes.</p>
-                        @if (context.User.IsInRole("Administrador") || context.User.IsInRole("Supervisor"))
-                        {
-                            <span class="status-badge allowed">✓ Permitido</span>
-                        }
-                        else
-                        {
-                            <span class="status-badge denied">✕ Bloqueado (Ejecutor no puede modificar)</span>
-                        }
+                        @RenderEstado(sesion, Permisos.Modificar)
                     </div>
                 </div>
 
                 <!-- Tarjeta Eliminar -->
-                <div class="perm-card @(context.User.IsInRole("Administrador") ? "card-active" : "card-disabled")">
+                <div class="perm-card @ClaseDeTarjeta(sesion, Permisos.Eliminar)">
                     <div class="card-icon icon-neutral">
                         <svg class="card-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="3 6 5 6 21 6" />
@@ -95,21 +81,13 @@
                     <div class="card-content">
                         <h3>4. Eliminar</h3>
                         <p>Eliminación definitiva de registros del sistema.</p>
-                        @if (context.User.IsInRole("Administrador"))
-                        {
-                            <span class="status-badge allowed">✓ Permitido (Solo Administrador)</span>
-                        }
-                        else
-                        {
-                            <span class="status-badge denied">✕ Bloqueado (@(context.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value) no puede eliminar)</span>
-                        }
+                        @RenderEstado(sesion, Permisos.Eliminar)
                     </div>
                 </div>
             </div>
 
             <!-- Panel de Administración Exclusivo -->
-            @if (context.User.IsInRole("Administrador"))
-            {
+            <VistaConPermiso Permiso="@Permisos.GestionarUsuarios">
                 <div class="admin-panel-card">
                     <div class="admin-top">
                         <span class="admin-badge">Panel Exclusivo</span>
@@ -122,11 +100,12 @@
                         </div>
                         <div>
                             <h3>Creación de Usuarios y Gestión de Roles</h3>
-                            <p>Como <strong>Administrador</strong>, tienes acceso total para crear nuevos usuarios, definir roles y auditar accesos en el sistema.</p>
+                            <p>Tu rol cuenta con permisos de administración de usuarios. La gestión completa de usuarios y roles se incorporará en el módulo administrativo.</p>
+                            <a href="administracion" class="admin-enlace">Ir a Administración</a>
                         </div>
                     </div>
                 </div>
-            }
+            </VistaConPermiso>
         </Authorized>
         <NotAuthorized>
             <div class="guest-hero">
@@ -492,4 +471,38 @@
         color: #0f172a;
         border-color: #94a3b8;
     }
+
+    .admin-enlace {
+        display: inline-block;
+        margin-top: 10px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--color-primary);
+        text-decoration: none;
+    }
+
+    .admin-enlace:hover {
+        text-decoration: underline;
+    }
 </style>
+
+@code {
+    // El estado de cada tarjeta sale de los claims de permisos del JWT.
+    // Esos claims se generan desde los booleanos del Rol almacenado en SQL Server.
+
+    private static string ClaseDeTarjeta(AuthenticationState sesion, string permiso) =>
+        sesion.User.TienePermiso(permiso) ? "card-active" : "card-disabled";
+
+    private RenderFragment RenderEstado(AuthenticationState sesion, string permiso)
+    {
+        var permitido = sesion.User.TienePermiso(permiso);
+        var clase = permitido ? "allowed" : "denied";
+        var rol = sesion.User.ObtenerRol();
+
+        var texto = permitido
+            ? "✓ Permitido"
+            : $"✕ Bloqueado ({rol ?? "su rol"} no puede {Permisos.Describir(permiso)})";
+
+        return @<span class="status-badge @clase">@texto</span>;
+    }
+}

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SistemaGestionEmpresarial.Api.Services;
 using SistemaGestionEmpresarial.Contracts;
@@ -15,10 +16,8 @@ public class AuthController : ControllerBase
         _authService = authService;
     }
 
-    /// <summary>
-    /// Endpoint para el inicio de sesión. Valida credenciales, comprueba estado activo y devuelve JWT con rol.
-    /// </summary>
     [HttpPost("login")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status401Unauthorized)]
@@ -36,11 +35,8 @@ public class AuthController : ControllerBase
 
         var response = await _authService.LoginAsync(request);
 
-        if (!response.Success)
-        {
-            return Unauthorized(response);
-        }
-
-        return Ok(response);
+        return response.Success
+            ? Ok(response)
+            : Unauthorized(response);
     }
 }
