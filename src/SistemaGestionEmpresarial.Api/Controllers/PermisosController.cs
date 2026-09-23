@@ -47,11 +47,11 @@ public sealed class PermisosController : ControllerBase
             .OrderBy(rol => rol.Nombre)
             .ToListAsync(cancellationToken);
 
-        return roles.Select(rol => new RolPermisosResponse
+        return Ok(roles.Select(rol => new RolPermisosResponse
         {
             Rol = rol.Nombre,
             Permisos = ObtenerPermisos(rol)
-        }).ToArray();
+        }).ToArray());
     }
 
     private static string[] ObtenerPermisos(Rol rol)
