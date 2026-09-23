@@ -1,5 +1,5 @@
 @page "/administracion"
-@attribute [Authorize(Policy = PoliticasDePermiso.GestionarUsuarios)]
+@attribute [Authorize(Policy = PoliticasDePermiso.GestionarRoles)]
 @inject PermisosApiService PermisosApi
 
 <PageTitle>Administración - SGECAR</PageTitle>
@@ -58,9 +58,9 @@
         </div>
 
         <p class="nota">
-            El alta y la edición de usuarios se habilitarán cuando el modelo de datos esté
-            disponible. La autorización de esas pantallas ya está preparada mediante los permisos
-            <code>GestionarUsuarios</code> y <code>GestionarRoles</code>.
+            Esta vista demuestra la autorización y consulta la matriz real almacenada en SQL Server.
+            El CRUD para crear y editar usuarios y roles se implementará como una funcionalidad
+            separada, reutilizando <code>GestionarUsuarios</code> y <code>GestionarRoles</code>.
         </p>
     }
 </div>
