@@ -1,14 +1,23 @@
+@* El router decide el acceso a cada ruta: a quien no ha iniciado sesión lo manda al login;
+   a quien sí la tiene pero carece del permiso, le explica por qué no puede entrar. *@
+
 <CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly">
         <Found Context="routeData">
             <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
-                <NotAuthorized>
-                    <div style="padding: 20px;">
-                        <h3>Acceso no autorizado</h3>
-                        <p>No cuenta con los permisos necesarios para acceder a este recurso.</p>
-                        <a href="/login" class="btn btn-primary">Ir a Iniciar Sesión</a>
-                    </div>
+                <NotAuthorized Context="sesion">
+                    @if (sesion.User.Identity?.IsAuthenticated == true)
+                    {
+                        <MensajeAccesoDenegado Rol="@sesion.User.ObtenerRol()" />
+                    }
+                    else
+                    {
+                        <RedirectToLogin />
+                    }
                 </NotAuthorized>
+                <Authorizing>
+                    <p class="router-estado" role="status">Verificando sus permisos…</p>
+                </Authorizing>
             </AuthorizeRouteView>
             <FocusOnNavigate RouteData="@routeData" Selector="h1" />
         </Found>
@@ -24,3 +33,11 @@
         </NotFound>
     </Router>
 </CascadingAuthenticationState>
+
+<style>
+    .router-estado {
+        padding: 32px;
+        text-align: center;
+        color: var(--color-text-muted);
+    }
+</style>
