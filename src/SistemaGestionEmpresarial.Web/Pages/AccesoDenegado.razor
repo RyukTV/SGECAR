@@ -1,0 +1,12 @@
+@page "/acceso-denegado"
+
+<PageTitle>Acceso denegado - SGECAR</PageTitle>
+
+<AuthorizeView>
+    <Authorized>
+        <MensajeAccesoDenegado Rol="@context.User.ObtenerRol()" />
+    </Authorized>
+    <NotAuthorized>
+        <MensajeAccesoDenegado Mensaje="Debe iniciar sesión para acceder a esta sección." />
+    </NotAuthorized>
+</AuthorizeView>
