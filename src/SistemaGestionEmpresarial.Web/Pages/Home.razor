@@ -487,8 +487,8 @@
 </style>
 
 @code {
-    // El estado de cada tarjeta sale del catálogo de permisos compartido con la API, de modo que
-    // esta pantalla no repita la lista de roles que puede realizar cada acción.
+    // El estado de cada tarjeta sale de los claims de permisos del JWT.
+    // Esos claims se generan desde los booleanos del Rol almacenado en SQL Server.
 
     private static string ClaseDeTarjeta(AuthenticationState sesion, string permiso) =>
         sesion.User.TienePermiso(permiso) ? "card-active" : "card-disabled";
