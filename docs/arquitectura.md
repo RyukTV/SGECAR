@@ -26,40 +26,48 @@ La práctica no especifica si el rol Supervisor puede agregar. Se configuró `Pu
 
 ## Control de acceso por roles
 
-La autorización se expresa en **permisos**, no en nombres de rol. El rol se traduce a un conjunto de permisos (`Consultar`, `Agregar`, `Modificar`, `Eliminar`, `GestionarUsuarios`, `GestionarRoles`) y son esos permisos los que se exigen en cada punto del sistema. Así, cambiar lo que puede hacer un rol no obliga a buscar condicionales repartidos por las vistas y los controladores.
+La autorización se expresa en **permisos**, no en nombres de rol repartidos por el código. Los permisos disponibles son `Consultar`, `Agregar`, `Modificar`, `Eliminar`, `GestionarUsuarios` y `GestionarRoles`.
+
+La fuente de verdad es la tabla `Roles` de SQL Server. Al iniciar sesión, `AuthService` ya tiene cargado el `Rol` del usuario y convierte sus columnas booleanas (`PuedeConsultar`, `PuedeAgregar`, etc.) en claims `permiso` dentro del JWT.
 
 ```text
-JWT (claim de rol)
+SQL Server / Roles
         ↓
-CatalogoDePermisos  (Contracts, compartido)
+AuthService
+        ↓
+JWT: rol + claims "permiso"
         ↓                         ↓
 Blazor: políticas            API: políticas
 AuthorizeView / rutas        [Permiso(...)] + IUsuarioActual
 (oculta la opción)           (rechaza la petición)
 ```
 
-### Fuente de verdad compartida
+### Fuente de verdad
 
-`SistemaGestionEmpresarial.Contracts.Autorizacion` contiene la matriz rol → permisos (`CatalogoDePermisos`), los nombres de rol y permiso, y los nombres de política. Al vivir en Contracts, el botón que Blazor oculta y la regla que la API aplica no pueden divergir. Esto amplía ligeramente la responsabilidad de Contracts: además de los contratos HTTP, transporta las reglas de autorización que ambos lados deben interpretar igual.
+No existe una segunda matriz rol → permisos hardcodeada para decidir la autorización. Blazor y la API leen los mismos claims del JWT, que fueron generados a partir del registro de `Rol` en SQL Server.
 
-Los valores del catálogo reproducen el seed de `DatabaseSeeder`, incluido el `PuedeAgregar = false` del Supervisor: la especificación recibida del PM confirma que el Supervisor consulta y modifica, el Ejecutor consulta y agrega, y solo el Administrador elimina y gestiona usuarios y roles.
+Esto permite que un rol nuevo funcione sin agregar su nombre al código: basta con que exista en la base de datos, tenga configuradas sus columnas de permisos y un usuario inicie sesión con ese rol.
+
+Si los permisos de un rol cambian mientras un usuario ya tiene una sesión activa, el cambio se refleja en un nuevo JWT al volver a iniciar sesión.
 
 ### Doble barrera
 
 Ocultar opciones en la interfaz es comodidad, no seguridad. Toda acción se verifica también en el servidor:
 
-- **Blazor** registra una política por permiso y las usa en `AuthorizeView`, en el componente `VistaConPermiso` y en `@attribute [Authorize(Policy = ...)]` para proteger rutas.
-- **La API** registra las mismas políticas y las exige con `[Permiso(...)]` en los Controllers. Además, `IUsuarioActual.ExigirPermisoAsync` permite comprobar permisos dentro de los Services cuando la regla depende de los datos y no solo del endpoint.
-- La API está **cerrada por omisión** (`FallbackPolicy`): un endpoint nuevo exige sesión aunque se olvide anotarlo. Los públicos (`api/auth/login`, `api/health`) están marcados con `[AllowAnonymous]`.
+- **Blazor** registra una política por permiso y las usa en `AuthorizeView`, en el componente `VistaConPermiso` y en `[Authorize(Policy = ...)]` para proteger rutas.
+- **La API** registra las mismas políticas y las exige con `[Permiso(...)]` en los Controllers. `IUsuarioActual.ExigirPermisoAsync` permite repetir la comprobación dentro de Services cuando sea necesario.
+- La API está **cerrada por omisión** mediante `FallbackPolicy`. Los endpoints públicos `api/auth/login` y `api/health` están marcados con `[AllowAnonymous]`.
 
 ### Respuestas de acceso denegado
 
-ASP.NET Core devuelve 401 y 403 con el cuerpo vacío, que no da nada que mostrar al usuario. `RespuestaDeAutorizacionHandler` los sustituye por un `AccesoDenegadoResponse` en JSON que indica el rol y el permiso que faltaba, y `MiddlewareDePermisoDenegado` hace lo mismo con las denegaciones lanzadas desde los Services. El cliente muestra ese mensaje tal cual, sin inventarse el texto.
+`RespuestaDeAutorizacionHandler` transforma los 401 y 403 en un `AccesoDenegadoResponse` JSON que el cliente puede mostrar. `MiddlewareDePermisoDenegado` aplica el mismo formato a las denegaciones lanzadas desde Services.
 
-### Integración con los roles de SQL Server
+### Catálogo administrativo
 
-`IProveedorDePermisos` es el único punto que debe cambiar cuando la tabla `Roles` se administre desde la aplicación: basta con una implementación que lea las columnas booleanas de la entidad `Rol` en lugar del catálogo. Los nombres de permiso ya coinciden con esas columnas, de modo que las políticas, los atributos, los Services y el cliente Blazor quedan intactos.
+`GET api/permisos/catalogo` consulta directamente `AppDbContext.Roles` y construye la matriz visible a partir de las columnas booleanas de cada rol. El endpoint requiere `GestionarRoles`.
 
-### Verificación
+### Verificación de la Etapa I
 
-Endpoints de `api/operaciones` (`consultar`, `agregar`, `modificar`, `eliminar`), uno por permiso, para comprobar el control de acceso de extremo a extremo mientras se define el modelo de datos. La página `/operaciones` los invoca con un botón **Forzar llamada a la API** que ignora los permisos del cliente, de modo que pueda verse que es el servidor quien rechaza. Cuando existan las entidades reales, estos endpoints se sustituyen por los de negocio conservando los mismos atributos.
+Los endpoints de `api/operaciones` (`consultar`, `agregar`, `modificar`, `eliminar`) sirven para demostrar el control de acceso extremo a extremo. La página `/operaciones` permite incluso forzar una petición para demostrar que el backend rechaza una acción aunque el cliente intente ejecutarla.
+
+Estos endpoints son de demostración de permisos; no sustituyen los CRUD de negocio que se implementen en etapas posteriores.
