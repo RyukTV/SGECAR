@@ -1,12 +1,12 @@
 namespace SistemaGestionEmpresarial.Contracts.Autorizacion;
 
 /// <summary>
-/// Acciones que el sistema sabe autorizar. Cada nombre corresponde a una columna booleana
-/// de la entidad <c>Rol</c>, de modo que el catálogo pueda alimentarse desde la base de datos
-/// sin cambiar los nombres usados por la API ni por Blazor.
+/// Acciones autorizables del sistema. Los nombres coinciden con las columnas booleanas de Rol.
 /// </summary>
 public static class Permisos
 {
+    public const string ClaimType = "permiso";
+
     public const string Consultar = "Consultar";
     public const string Agregar = "Agregar";
     public const string Modificar = "Modificar";
@@ -24,10 +24,6 @@ public static class Permisos
         GestionarRoles
     };
 
-    /// <summary>
-    /// Texto en minúsculas para redactar mensajes dirigidos al usuario,
-    /// por ejemplo "No cuenta con el permiso necesario para <c>eliminar registros</c>".
-    /// </summary>
     public static string Describir(string permiso) => permiso switch
     {
         Consultar => "consultar registros",
