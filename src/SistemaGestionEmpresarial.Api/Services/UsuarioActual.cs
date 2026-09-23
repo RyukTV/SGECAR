@@ -7,12 +7,10 @@ namespace SistemaGestionEmpresarial.Api.Services;
 public sealed class UsuarioActual : IUsuarioActual
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly IProveedorDePermisos _proveedorDePermisos;
 
-    public UsuarioActual(IHttpContextAccessor httpContextAccessor, IProveedorDePermisos proveedorDePermisos)
+    public UsuarioActual(IHttpContextAccessor httpContextAccessor)
     {
         _httpContextAccessor = httpContextAccessor;
-        _proveedorDePermisos = proveedorDePermisos;
     }
 
     private ClaimsPrincipal? Principal => _httpContextAccessor.HttpContext?.User;
@@ -24,13 +22,10 @@ public sealed class UsuarioActual : IUsuarioActual
     public string? Rol => Principal.ObtenerRol();
 
     public Task<IReadOnlySet<string>> ObtenerPermisosAsync(CancellationToken cancellationToken = default) =>
-        _proveedorDePermisos.ObtenerPermisosAsync(Rol, cancellationToken);
+        Task.FromResult(Principal.ObtenerPermisos());
 
-    public async Task<bool> TienePermisoAsync(string permiso, CancellationToken cancellationToken = default)
-    {
-        var permisos = await ObtenerPermisosAsync(cancellationToken);
-        return permisos.Contains(permiso);
-    }
+    public Task<bool> TienePermisoAsync(string permiso, CancellationToken cancellationToken = default) =>
+        Task.FromResult(Principal.TienePermiso(permiso));
 
     public async Task ExigirPermisoAsync(string permiso, CancellationToken cancellationToken = default)
     {
