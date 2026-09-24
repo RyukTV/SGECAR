@@ -18,6 +18,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IOperacionesService, OperacionesService>();
+builder.Services.AddScoped<IUsuariosService, UsuariosService>();
+builder.Services.AddScoped<IRolesService, RolesService>();
 
 var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("Falta la clave de seguridad Jwt:Key en la configuración.");

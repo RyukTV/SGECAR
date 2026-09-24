@@ -1,0 +1,224 @@
+@page "/administracion/roles"
+@attribute [Authorize(Policy = PoliticasDePermiso.GestionarRoles)]
+@inject RolesApiService RolesApi
+@inject IJSRuntime JS
+
+<PageTitle>Gestión de Roles - SGECAR</PageTitle>
+
+<div class="gestion-wrapper">
+    <header class="gestion-header">
+        <div>
+            <a href="/administracion" class="gestion-volver">← Administración</a>
+            <h1>Gestión de Roles</h1>
+            <p>Defina roles y sus permisos sin modificar el código del sistema.</p>
+        </div>
+        <button class="gestion-btn gestion-btn-primary" @onclick="PrepararCreacion">Nuevo rol</button>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(mensaje))
+    {
+        <div class="gestion-alert @(esError ? "gestion-alert-error" : "gestion-alert-ok")" role="alert">@mensaje</div>
+    }
+
+    <form class="gestion-search" @onsubmit="BuscarAsync" @onsubmit:preventDefault>
+        <input @bind="buscar" placeholder="Buscar por nombre del rol" aria-label="Buscar roles" />
+        <button class="gestion-btn" type="submit" disabled="@cargando">Buscar</button>
+        <button class="gestion-btn gestion-btn-light" type="button" @onclick="LimpiarBusquedaAsync" disabled="@cargando">Limpiar</button>
+    </form>
+
+    @if (mostrarFormulario)
+    {
+        <section class="gestion-panel">
+            <h2>@(idEdicion.HasValue ? "Editar rol" : "Crear rol")</h2>
+            <EditForm Model="formulario" OnValidSubmit="GuardarAsync">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <label>Nombre del rol
+                    <InputText @bind-Value="formulario.Nombre" />
+                </label>
+                <div class="gestion-permisos">
+                    <label><InputCheckbox @bind-Value="formulario.PuedeConsultar" /> Consultar</label>
+                    <label><InputCheckbox @bind-Value="formulario.PuedeAgregar" /> Agregar</label>
+                    <label><InputCheckbox @bind-Value="formulario.PuedeModificar" /> Modificar</label>
+                    <label><InputCheckbox @bind-Value="formulario.PuedeEliminar" /> Eliminar</label>
+                    <label><InputCheckbox @bind-Value="formulario.PuedeGestionarUsuarios" /> Gestionar usuarios</label>
+                    <label><InputCheckbox @bind-Value="formulario.PuedeGestionarRoles" /> Gestionar roles</label>
+                </div>
+                <div class="gestion-actions">
+                    <button class="gestion-btn gestion-btn-primary" type="submit" disabled="@guardando">Guardar</button>
+                    <button class="gestion-btn gestion-btn-light" type="button" @onclick="CancelarFormulario">Cancelar</button>
+                </div>
+            </EditForm>
+            <p class="gestion-nota">Los cambios de permisos se aplicarán a los usuarios en su próximo inicio de sesión.</p>
+        </section>
+    }
+
+    @if (cargando)
+    {
+        <p class="gestion-estado" role="status">Cargando roles…</p>
+    }
+    else if (roles.Count == 0)
+    {
+        <p class="gestion-estado">No se encontraron roles.</p>
+    }
+    else
+    {
+        <div class="gestion-tabla-scroll">
+            <table class="gestion-tabla gestion-tabla-roles">
+                <thead><tr><th>Rol</th><th>Consultar</th><th>Agregar</th><th>Modificar</th><th>Eliminar</th><th>Usuarios</th><th>Roles</th><th>Acciones</th></tr></thead>
+                <tbody>
+                    @foreach (var rol in roles)
+                    {
+                        <tr>
+                            <td><strong>@rol.Nombre</strong></td>
+                            <td>@Marca(rol.PuedeConsultar)</td>
+                            <td>@Marca(rol.PuedeAgregar)</td>
+                            <td>@Marca(rol.PuedeModificar)</td>
+                            <td>@Marca(rol.PuedeEliminar)</td>
+                            <td>@Marca(rol.PuedeGestionarUsuarios)</td>
+                            <td>@Marca(rol.PuedeGestionarRoles)</td>
+                            <td class="gestion-actions-tabla">
+                                <button class="gestion-btn gestion-btn-small" @onclick="() => PrepararEdicion(rol)">Editar</button>
+                                <button class="gestion-btn gestion-btn-danger gestion-btn-small" @onclick="() => EliminarAsync(rol)">Eliminar</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<RolResponse> roles = [];
+    private RolForm formulario = new();
+    private int? idEdicion;
+    private string buscar = string.Empty;
+    private string? mensaje;
+    private bool esError;
+    private bool cargando = true;
+    private bool guardando;
+    private bool mostrarFormulario;
+
+    protected override Task OnInitializedAsync() => CargarRolesAsync();
+
+    private async Task CargarRolesAsync()
+    {
+        cargando = true;
+        var resultado = await RolesApi.ObtenerAsync(buscar);
+        if (resultado.Exito)
+            roles = resultado.Valor!.ToList();
+        else
+            MostrarMensaje(resultado.Mensaje, true);
+        cargando = false;
+    }
+
+    private Task BuscarAsync() => CargarRolesAsync();
+
+    private async Task LimpiarBusquedaAsync()
+    {
+        buscar = string.Empty;
+        await CargarRolesAsync();
+    }
+
+    private void PrepararCreacion()
+    {
+        idEdicion = null;
+        formulario = new RolForm();
+        mostrarFormulario = true;
+        mensaje = null;
+    }
+
+    private void PrepararEdicion(RolResponse rol)
+    {
+        idEdicion = rol.Id;
+        formulario = new RolForm
+        {
+            Nombre = rol.Nombre,
+            PuedeAgregar = rol.PuedeAgregar,
+            PuedeModificar = rol.PuedeModificar,
+            PuedeEliminar = rol.PuedeEliminar,
+            PuedeConsultar = rol.PuedeConsultar,
+            PuedeGestionarUsuarios = rol.PuedeGestionarUsuarios,
+            PuedeGestionarRoles = rol.PuedeGestionarRoles
+        };
+        mostrarFormulario = true;
+        mensaje = null;
+    }
+
+    private void CancelarFormulario() => mostrarFormulario = false;
+
+    private async Task GuardarAsync()
+    {
+        guardando = true;
+        ResultadoApi<RolResponse> resultado;
+        if (idEdicion.HasValue)
+        {
+            resultado = await RolesApi.ActualizarAsync(idEdicion.Value, new ActualizarRolRequest
+            {
+                Nombre = formulario.Nombre,
+                PuedeAgregar = formulario.PuedeAgregar,
+                PuedeModificar = formulario.PuedeModificar,
+                PuedeEliminar = formulario.PuedeEliminar,
+                PuedeConsultar = formulario.PuedeConsultar,
+                PuedeGestionarUsuarios = formulario.PuedeGestionarUsuarios,
+                PuedeGestionarRoles = formulario.PuedeGestionarRoles
+            });
+        }
+        else
+        {
+            resultado = await RolesApi.CrearAsync(new CrearRolRequest
+            {
+                Nombre = formulario.Nombre,
+                PuedeAgregar = formulario.PuedeAgregar,
+                PuedeModificar = formulario.PuedeModificar,
+                PuedeEliminar = formulario.PuedeEliminar,
+                PuedeConsultar = formulario.PuedeConsultar,
+                PuedeGestionarUsuarios = formulario.PuedeGestionarUsuarios,
+                PuedeGestionarRoles = formulario.PuedeGestionarRoles
+            });
+        }
+
+        guardando = false;
+        if (!resultado.Exito)
+        {
+            MostrarMensaje(resultado.Mensaje, true);
+            return;
+        }
+
+        MostrarMensaje(idEdicion.HasValue ? "Rol actualizado correctamente." : "Rol creado correctamente.", false);
+        mostrarFormulario = false;
+        await CargarRolesAsync();
+    }
+
+    private async Task EliminarAsync(RolResponse rol)
+    {
+        if (!await JS.InvokeAsync<bool>("confirm", $"¿Eliminar el rol '{rol.Nombre}'?"))
+            return;
+
+        var resultado = await RolesApi.EliminarAsync(rol.Id);
+        MostrarMensaje(resultado.Mensaje, !resultado.Exito);
+        if (resultado.Exito)
+            await CargarRolesAsync();
+    }
+
+    private static string Marca(bool permitido) => permitido ? "Sí" : "No";
+
+    private void MostrarMensaje(string texto, bool error)
+    {
+        mensaje = texto;
+        esError = error;
+    }
+
+    private sealed class RolForm
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "El nombre del rol es obligatorio.")]
+        public string Nombre { get; set; } = string.Empty;
+        public bool PuedeAgregar { get; set; }
+        public bool PuedeModificar { get; set; }
+        public bool PuedeEliminar { get; set; }
+        public bool PuedeConsultar { get; set; }
+        public bool PuedeGestionarUsuarios { get; set; }
+        public bool PuedeGestionarRoles { get; set; }
+    }
+}

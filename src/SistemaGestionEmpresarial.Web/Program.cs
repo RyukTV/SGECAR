@@ -23,5 +23,7 @@ builder.Services.AddScoped<AuthApiService>();
 // Control de acceso por rol: registra una política por permiso, idéntica a la de la API.
 builder.Services.AddAutorizacionPorPermisos();
 builder.Services.AddScoped<PermisosApiService>();
+builder.Services.AddScoped<UsuariosApiService>();
+builder.Services.AddScoped<RolesApiService>();
 
 await builder.Build().RunAsync();

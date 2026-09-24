@@ -1,6 +1,7 @@
 @page "/administracion"
-@attribute [Authorize(Policy = PoliticasDePermiso.GestionarRoles)]
+@attribute [Authorize]
 @inject PermisosApiService PermisosApi
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Administración - SGECAR</PageTitle>
 
@@ -13,21 +14,38 @@
         </p>
     </header>
 
-    @if (cargando)
+    <div class="gestion-cards">
+        <VistaConPermiso Permiso="@Permisos.GestionarUsuarios">
+            <a class="gestion-card" href="/administracion/usuarios">
+                <h2>Gestión de Usuarios</h2>
+                <p>Consultar, buscar, crear, modificar, activar y eliminar usuarios.</p>
+            </a>
+        </VistaConPermiso>
+        <VistaConPermiso Permiso="@Permisos.GestionarRoles">
+            <a class="gestion-card" href="/administracion/roles">
+                <h2>Gestión de Roles</h2>
+                <p>Administrar roles y los seis permisos almacenados en SQL Server.</p>
+            </a>
+        </VistaConPermiso>
+    </div>
+
+    @if (puedeGestionarRoles)
     {
-        <p class="estado" role="status">Cargando la matriz de permisos…</p>
-    }
-    else if (catalogo is null)
-    {
-        <div class="estado estado-error" role="alert">
-            No fue posible obtener la matriz de permisos. Verifique que la API esté disponible
-            y que su rol conserve el permiso de gestión de roles.
-        </div>
-    }
-    else
-    {
-        <div class="tabla-scroll">
-            <table class="tabla-permisos">
+        @if (cargando)
+        {
+            <p class="estado" role="status">Cargando la matriz de permisos…</p>
+        }
+        else if (catalogo is null)
+        {
+            <div class="estado estado-error" role="alert">
+                No fue posible obtener la matriz de permisos. Verifique que la API esté disponible
+                y que su rol conserve el permiso de gestión de roles.
+            </div>
+        }
+        else
+        {
+            <div class="tabla-scroll">
+                <table class="tabla-permisos">
                 <thead>
                     <tr>
                         <th scope="col">Rol</th>
@@ -54,14 +72,11 @@
                         </tr>
                     }
                 </tbody>
-            </table>
-        </div>
+                </table>
+            </div>
 
-        <p class="nota">
-            Esta vista demuestra la autorización y consulta la matriz real almacenada en SQL Server.
-            El CRUD para crear y editar usuarios y roles se implementará como una funcionalidad
-            separada, reutilizando <code>GestionarUsuarios</code> y <code>GestionarRoles</code>.
-        </p>
+            <p class="nota">La matriz refleja los permisos almacenados actualmente en SQL Server.</p>
+        }
     }
 </div>
 
@@ -171,16 +186,14 @@
 @code {
     private IReadOnlyList<RolPermisosResponse>? catalogo;
     private bool cargando = true;
+    private bool puedeGestionarRoles;
 
     protected override async Task OnInitializedAsync()
     {
-        try
-        {
+        var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        puedeGestionarRoles = estado.User.TienePermiso(Permisos.GestionarRoles);
+        if (puedeGestionarRoles)
             catalogo = await PermisosApi.ObtenerCatalogoAsync();
-        }
-        finally
-        {
-            cargando = false;
-        }
+        cargando = false;
     }
 }

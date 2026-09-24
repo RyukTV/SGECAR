@@ -1,0 +1,243 @@
+@page "/administracion/usuarios"
+@attribute [Authorize(Policy = PoliticasDePermiso.GestionarUsuarios)]
+@inject UsuariosApiService UsuariosApi
+@inject IJSRuntime JS
+
+<PageTitle>Gestión de Usuarios - SGECAR</PageTitle>
+
+<div class="gestion-wrapper">
+    <header class="gestion-header">
+        <div>
+            <a href="/administracion" class="gestion-volver">← Administración</a>
+            <h1>Gestión de Usuarios</h1>
+            <p>Consulte, cree y actualice las cuentas que acceden a SGECAR.</p>
+        </div>
+        <button class="gestion-btn gestion-btn-primary" @onclick="PrepararCreacion">Nuevo usuario</button>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(mensaje))
+    {
+        <div class="gestion-alert @(esError ? "gestion-alert-error" : "gestion-alert-ok")" role="alert">@mensaje</div>
+    }
+
+    <form class="gestion-search" @onsubmit="BuscarAsync" @onsubmit:preventDefault>
+        <input @bind="buscar" placeholder="Buscar por usuario, nombre completo o rol" aria-label="Buscar usuarios" />
+        <button class="gestion-btn" type="submit" disabled="@cargando">Buscar</button>
+        <button class="gestion-btn gestion-btn-light" type="button" @onclick="LimpiarBusquedaAsync" disabled="@cargando">Limpiar</button>
+    </form>
+
+    @if (mostrarFormulario)
+    {
+        <section class="gestion-panel">
+            <h2>@(idEdicion.HasValue ? "Editar usuario" : "Crear usuario")</h2>
+            <EditForm Model="formulario" OnValidSubmit="GuardarAsync">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div class="gestion-grid">
+                    <label>Usuario
+                        <InputText @bind-Value="formulario.NombreUsuario" autocomplete="off" />
+                    </label>
+                    <label>Nombre completo
+                        <InputText @bind-Value="formulario.NombreCompleto" />
+                    </label>
+                    <label>Rol
+                        <InputSelect @bind-Value="formulario.RolId">
+                            <option value="0">Seleccione un rol</option>
+                            @foreach (var rol in roles)
+                            {
+                                <option value="@rol.Id">@rol.Nombre</option>
+                            }
+                        </InputSelect>
+                    </label>
+                    <label>@(idEdicion.HasValue ? "Nueva contraseña (opcional)" : "Contraseña")
+                        <InputText @bind-Value="formulario.Password" type="password" autocomplete="new-password" />
+                    </label>
+                    <label class="gestion-check">
+                        <InputCheckbox @bind-Value="formulario.Activo" /> Activo
+                    </label>
+                </div>
+                <div class="gestion-actions">
+                    <button class="gestion-btn gestion-btn-primary" type="submit" disabled="@guardando">Guardar</button>
+                    <button class="gestion-btn gestion-btn-light" type="button" @onclick="CancelarFormulario">Cancelar</button>
+                </div>
+            </EditForm>
+            <p class="gestion-nota">Los cambios de rol se aplicarán al usuario en su próximo inicio de sesión.</p>
+        </section>
+    }
+
+    @if (cargando)
+    {
+        <p class="gestion-estado" role="status">Cargando usuarios…</p>
+    }
+    else if (usuarios.Count == 0)
+    {
+        <p class="gestion-estado">No se encontraron usuarios.</p>
+    }
+    else
+    {
+        <div class="gestion-tabla-scroll">
+            <table class="gestion-tabla">
+                <thead><tr><th>Usuario</th><th>Nombre completo</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <tbody>
+                    @foreach (var usuario in usuarios)
+                    {
+                        <tr>
+                            <td><strong>@usuario.NombreUsuario</strong></td>
+                            <td>@usuario.NombreCompleto</td>
+                            <td>@usuario.NombreRol</td>
+                            <td><span class="gestion-badge @(usuario.Activo ? "activo" : "inactivo")">@(usuario.Activo ? "Activo" : "Inactivo")</span></td>
+                            <td class="gestion-actions-tabla">
+                                <button class="gestion-btn gestion-btn-small" @onclick="() => PrepararEdicion(usuario)">Editar</button>
+                                <button class="gestion-btn gestion-btn-danger gestion-btn-small" @onclick="() => EliminarAsync(usuario)">Eliminar</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<UsuarioResponse> usuarios = [];
+    private List<RolOpcionResponse> roles = [];
+    private UsuarioForm formulario = new();
+    private int? idEdicion;
+    private string buscar = string.Empty;
+    private string? mensaje;
+    private bool esError;
+    private bool cargando = true;
+    private bool guardando;
+    private bool mostrarFormulario;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var resultadoRoles = await UsuariosApi.ObtenerRolesDisponiblesAsync();
+        if (resultadoRoles.Exito)
+            roles = resultadoRoles.Valor!.ToList();
+        else
+            MostrarMensaje(resultadoRoles.Mensaje, true);
+
+        await CargarUsuariosAsync();
+    }
+
+    private async Task CargarUsuariosAsync()
+    {
+        cargando = true;
+        var resultado = await UsuariosApi.ObtenerAsync(buscar);
+        if (resultado.Exito)
+            usuarios = resultado.Valor!.ToList();
+        else
+            MostrarMensaje(resultado.Mensaje, true);
+        cargando = false;
+    }
+
+    private Task BuscarAsync() => CargarUsuariosAsync();
+
+    private async Task LimpiarBusquedaAsync()
+    {
+        buscar = string.Empty;
+        await CargarUsuariosAsync();
+    }
+
+    private void PrepararCreacion()
+    {
+        idEdicion = null;
+        formulario = new UsuarioForm { Activo = true };
+        mostrarFormulario = true;
+        mensaje = null;
+    }
+
+    private void PrepararEdicion(UsuarioResponse usuario)
+    {
+        idEdicion = usuario.Id;
+        formulario = new UsuarioForm
+        {
+            NombreUsuario = usuario.NombreUsuario,
+            NombreCompleto = usuario.NombreCompleto,
+            RolId = usuario.RolId,
+            Activo = usuario.Activo
+        };
+        mostrarFormulario = true;
+        mensaje = null;
+    }
+
+    private void CancelarFormulario() => mostrarFormulario = false;
+
+    private async Task GuardarAsync()
+    {
+        if (!idEdicion.HasValue && string.IsNullOrWhiteSpace(formulario.Password))
+        {
+            MostrarMensaje("La contraseña es obligatoria al crear un usuario.", true);
+            return;
+        }
+
+        guardando = true;
+        ResultadoApi<UsuarioResponse> resultado;
+        if (idEdicion.HasValue)
+        {
+            resultado = await UsuariosApi.ActualizarAsync(idEdicion.Value, new ActualizarUsuarioRequest
+            {
+                NombreUsuario = formulario.NombreUsuario,
+                NombreCompleto = formulario.NombreCompleto,
+                RolId = formulario.RolId,
+                Activo = formulario.Activo,
+                NuevaPassword = string.IsNullOrWhiteSpace(formulario.Password) ? null : formulario.Password
+            });
+        }
+        else
+        {
+            resultado = await UsuariosApi.CrearAsync(new CrearUsuarioRequest
+            {
+                NombreUsuario = formulario.NombreUsuario,
+                NombreCompleto = formulario.NombreCompleto,
+                Password = formulario.Password,
+                RolId = formulario.RolId,
+                Activo = formulario.Activo
+            });
+        }
+
+        guardando = false;
+        if (!resultado.Exito)
+        {
+            MostrarMensaje(resultado.Mensaje, true);
+            return;
+        }
+
+        MostrarMensaje(idEdicion.HasValue ? "Usuario actualizado correctamente." : "Usuario creado correctamente.", false);
+        mostrarFormulario = false;
+        await CargarUsuariosAsync();
+    }
+
+    private async Task EliminarAsync(UsuarioResponse usuario)
+    {
+        if (!await JS.InvokeAsync<bool>("confirm", $"¿Eliminar al usuario '{usuario.NombreUsuario}'?"))
+            return;
+
+        var resultado = await UsuariosApi.EliminarAsync(usuario.Id);
+        MostrarMensaje(resultado.Mensaje, !resultado.Exito);
+        if (resultado.Exito)
+            await CargarUsuariosAsync();
+    }
+
+    private void MostrarMensaje(string texto, bool error)
+    {
+        mensaje = texto;
+        esError = error;
+    }
+
+    private sealed class UsuarioForm
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "El nombre de usuario es obligatorio.")]
+        public string NombreUsuario { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "El nombre completo es obligatorio.")]
+        public string NombreCompleto { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un rol.")]
+        public int RolId { get; set; }
+
+        public string Password { get; set; } = string.Empty;
+        public bool Activo { get; set; } = true;
+    }
+}
