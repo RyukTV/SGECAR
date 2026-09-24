@@ -1,148 +1,136 @@
-# Sistema de Gestión Empresarial con Control de Acceso por Roles
+# SGECAR
 
-Proyecto académico desarrollado por un equipo de 3 integrantes.
+Sistema de Gestión Empresarial con Control de Acceso por Roles, desarrollado como proyecto académico por un equipo de tres integrantes.
 
-## Flujo de trabajo
+## Tecnologías
+
+- C# y .NET 8
+- Blazor WebAssembly independiente
+- ASP.NET Core Web API con Controllers
+- Entity Framework Core 8
+- SQL Server Express
+- JWT y autorización basada en permisos
+
+## Arquitectura
+
+```text
+Blazor WebAssembly
+        ↓ HTTP/JSON
+ASP.NET Core Web API
+        ↓
+Controllers
+        ↓
+Services
+        ↓
+Entity Framework Core
+        ↓
+SQL Server
+```
+
+La solución contiene tres proyectos:
+
+- `SistemaGestionEmpresarial.Web`: interfaz Blazor WebAssembly.
+- `SistemaGestionEmpresarial.Api`: API, autenticación, servicios y persistencia.
+- `SistemaGestionEmpresarial.Contracts`: contratos HTTP compartidos, sin lógica de negocio.
+
+La explicación ampliada está en [docs/arquitectura.md](docs/arquitectura.md).
+
+## Funcionalidades de la Etapa I
+
+- Inicio y cierre de sesión con JWT.
+- Sesión persistente en el navegador.
+- Bloqueo durante un minuto después de tres intentos fallidos.
+- Autorización por permisos en Blazor y en la API.
+- CRUD y búsqueda de usuarios.
+- CRUD y búsqueda de roles y sus permisos.
+- Validación de nombres duplicados y relaciones existentes.
+- Contraseñas almacenadas exclusivamente como hash.
+- Migración y datos iniciales idempotentes en Development.
+
+## Roles iniciales
+
+| Rol | Consultar | Agregar | Modificar | Eliminar | Gestionar usuarios | Gestionar roles |
+| --- | --- | --- | --- | --- | --- | --- |
+| Administrador | Sí | Sí | Sí | Sí | Sí | Sí |
+| Supervisor | Sí | No | Sí | No | No | No |
+| Ejecutor | Sí | Sí | No | No | No | No |
+
+La especificación académica no definía si Supervisor podía agregar. Para la Etapa I se tomó explícitamente la decisión de usar `PuedeAgregar = false`; el equipo puede revisarla con el profesor sin cambiar el modelo de autorización.
+
+## Requisitos y ejecución local
+
+Se requiere .NET SDK 8, SQL Server Express en `localhost\SQLEXPRESS` y la base `SistemaGestionEmpresarialDb`, que se crea y migra automáticamente al iniciar la API en Development.
+
+```bash
+dotnet restore
+dotnet tool restore
+dotnet user-secrets set "Jwt:Key" "REEMPLAZAR-POR-UNA-CLAVE-LARGA-Y-ALEATORIA" --project src/SistemaGestionEmpresarial.Api
+```
+
+La clave JWT es obligatoria y no debe guardarse en archivos versionados. Para iniciar manualmente, usar dos terminales:
+
+```bash
+dotnet run --project src/SistemaGestionEmpresarial.Api --launch-profile http
+dotnet run --project src/SistemaGestionEmpresarial.Web --launch-profile http
+```
+
+También puede ejecutarse `iniciar.bat`, que abre ambos proyectos y el navegador. `detener.bat` detiene los procesos iniciados.
+
+- API: `http://localhost:5080`
+- Web: `http://localhost:5180`
+- Swagger en Development: `http://localhost:5080/swagger`
+
+Usuarios de desarrollo creados por el seeder:
+
+| Usuario | Contraseña inicial | Rol |
+| --- | --- | --- |
+| `admin` | `admin123` | Administrador |
+| `supervisor` | `supervisor123` | Supervisor |
+| `ejecutor` | `ejecutor123` | Ejecutor |
+
+Estas credenciales son únicamente para desarrollo académico y deben cambiarse o eliminarse antes de cualquier despliegue real.
+
+## Seguridad
+
+- La API está cerrada por omisión; solo login y health son anónimos.
+- Los permisos proceden de SQL Server, se incluyen como claims en el JWT y se vuelven a cargar en el siguiente inicio de sesión.
+- Ocultar controles en Blazor no sustituye la validación: cada endpoint administrativo exige el permiso correspondiente.
+- Los contratos nunca exponen `PasswordHash`.
+- La clave JWT se configura con User Secrets, no en `appsettings.json`.
+
+Los resultados y capturas de la validación integral están en [docs/ETAPA-I.md](docs/ETAPA-I.md) y [docs/evidencias/etapa-1/RESULTADOS_PRUEBAS.md](docs/evidencias/etapa-1/RESULTADOS_PRUEBAS.md).
+
+## Flujo de trabajo Git
 
 ```text
 main
-  ↑
-Pull Request
-  ↑
+  ↑ Pull Request revisado
 rama de trabajo
 ```
 
-`main` representa siempre la versión revisada, aprobada, integrada y estable del proyecto. Nadie debe desarrollar directamente sobre esta rama.
+`main` representa la versión estable. No se desarrolla, hace push, merge ni force push directamente sobre ella. Todo cambio debe realizarse en una rama y entrar mediante Pull Request después de compilarse, probarse y revisarse.
 
-## Regla principal
+Tipos de ramas recomendados:
 
-Ningún cambio entra a `main` sin revisión previa. Todo cambio debe realizarse en una rama de trabajo y proponerse mediante un Pull Request hacia `main`.
+- `feature/<descripcion>`: funcionalidad nueva.
+- `fix/<descripcion>`: corrección.
+- `docs/<descripcion>`: documentación.
+- `refactor/<descripcion>`: reorganización sin cambio funcional.
+- `test/<descripcion>`: pruebas.
+- `chore/<descripcion>`: configuración o mantenimiento.
 
-## Crear una rama
-
-Toda rama nueva debe crearse desde `main` actualizado:
-
-```bash
-git switch main
-git pull origin main
-git switch -c tipo/nombre-rama
-```
-
-Ejemplo:
+Crear una rama desde `main` actualizado:
 
 ```bash
 git switch main
 git pull origin main
-git switch -c feature/login
+git switch -c feature/nombre
 ```
 
-## Tipos de ramas
-
-### `feature/<descripcion>`
-
-Para desarrollar una funcionalidad nueva.
-
-Ejemplos: `feature/cimiento`, `feature/login`, `feature/roles`, `feature/frontend`, `feature/modelo-dominio`.
-
-### `fix/<descripcion>`
-
-Para corregir un error o comportamiento incorrecto.
-
-Ejemplos: `fix/login-validation`, `fix/api-connection`, `fix/roles-permissions`.
-
-### `docs/<descripcion>`
-
-Para cambios de documentación.
-
-Ejemplos: `docs/documentacion-etapa1`, `docs/modelo-dominio`, `docs/readme`.
-
-### `refactor/<descripcion>`
-
-Para reorganizar o mejorar código existente sin cambiar su comportamiento funcional.
-
-Ejemplos: `refactor/auth-service`, `refactor/project-structure`.
-
-### `test/<descripcion>`
-
-Para agregar o modificar pruebas como objetivo principal de la rama.
-
-Ejemplos: `test/login`, `test/roles`.
-
-### `chore/<descripcion>`
-
-Para tareas de configuración o mantenimiento que no representan una funcionalidad.
-
-Ejemplos: `chore/configuracion-inicial`, `chore/update-gitignore`.
-
-## Commits
-
-Los mensajes de commit deben ser cortos y claros. Ejemplos:
-
-```text
-feat: agrega login
-fix: corrige validacion de usuario
-docs: actualiza documentacion
-refactor: reorganiza servicio de autenticacion
-test: agrega pruebas de login
-chore: configura repositorio
-```
-
-Se deben evitar mensajes imprecisos como `cambios`, `cosas`, `prueba`, `update` o `final`.
-
-## Subir trabajo
+Usar commits breves y claros, por ejemplo `feat: agrega login` o `fix: corrige validacion de usuario`. Después:
 
 ```bash
-git add .
-git commit -m "tipo: descripcion"
-git push -u origin nombre-rama
+git push -u origin feature/nombre
 ```
 
-Ejemplo:
-
-```bash
-git push -u origin feature/login
-```
-
-Después se debe crear un Pull Request hacia `main`.
-
-## Regla de integración a main
-
-- No se hace push directo a `main`.
-- No se hace merge directo sin revisión.
-- Todo cambio entra mediante un Pull Request.
-- El código debe ser revisado antes del merge.
-- Si hay errores o cambios solicitados, deben corregirse en la misma rama.
-- Solo después de la aprobación se integra el cambio a `main`.
-- `main` debe mantenerse estable.
-- No se permite hacer force push sobre `main`.
-
-Antes de integrarse, todo cambio debe:
-
-1. Estar terminado.
-2. Estar probado por quien lo realizó.
-3. Subirse a su rama de trabajo.
-4. Abrir un Pull Request hacia `main`.
-5. Ser revisado.
-6. Corregirse si hace falta en la misma rama.
-7. Ser aprobado antes del merge.
-
-## Conflictos
-
-Si dos integrantes necesitan modificar el mismo archivo o la misma funcionalidad, deben coordinarse antes de comenzar.
-
-Si aparece un conflicto de Git importante, no debe resolverse a ciegas. Debe revisarse con el integrante responsable del código afectado.
-
-## Estructura técnica
-
-- `src/SistemaGestionEmpresarial.Contracts`: contratos HTTP compartidos.
-- `src/SistemaGestionEmpresarial.Api`: Web API con Controllers y base para EF Core.
-- `src/SistemaGestionEmpresarial.Web`: Blazor WebAssembly independiente.
-
-Se requiere el SDK .NET 8. Para ejecutar localmente, abrir dos terminales y usar:
-
-```bash
-dotnet run --project src/SistemaGestionEmpresarial.Api
-dotnet run --project src/SistemaGestionEmpresarial.Web
-```
-
-La API escucha en `http://localhost:5080` y el frontend en `http://localhost:5180`. La página temporal `/api-status` permite comprobar la conexión. Esta base no crea la base de datos ni implementa autenticación.
+Si hay conflictos importantes o dos integrantes deben modificar la misma funcionalidad, deben coordinarse y revisar el código afectado antes de resolverlos.
