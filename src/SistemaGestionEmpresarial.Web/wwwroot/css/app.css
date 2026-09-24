@@ -128,3 +128,53 @@ body {
 .loading-progress-text:after {
     content: var(--blazor-load-percentage-text, "Cargando...");
 }
+
+/* Formularios y tablas del módulo administrativo. */
+.gestion-wrapper { max-width: 1180px; margin: 0 auto; }
+.gestion-header { display: flex; justify-content: space-between; gap: 20px; align-items: flex-end; margin-bottom: 22px; }
+.gestion-header h1 { margin: 5px 0; font-size: 1.65rem; color: var(--color-text-primary); }
+.gestion-header p, .gestion-nota { margin: 0; color: var(--color-text-muted); font-size: .88rem; }
+.gestion-volver { color: var(--color-primary); text-decoration: none; font-size: .82rem; font-weight: 700; }
+.gestion-search { display: flex; gap: 8px; margin-bottom: 18px; }
+.gestion-search input { flex: 1; min-width: 220px; }
+.gestion-search input, .gestion-panel input[type="text"], .gestion-panel input[type="password"], .gestion-panel select {
+    padding: 9px 11px; border: 1px solid var(--color-border); border-radius: 7px; font: inherit; background: #fff;
+}
+.gestion-btn { border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text-primary); border-radius: 7px; padding: 8px 13px; font: inherit; font-size: .84rem; font-weight: 700; cursor: pointer; }
+.gestion-btn:disabled { opacity: .55; cursor: wait; }
+.gestion-btn-primary { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+.gestion-btn-light { background: #f8fafc; }
+.gestion-btn-danger { color: #b91c1c; border-color: #fecaca; background: #fff7f7; }
+.gestion-btn-small { padding: 5px 9px; font-size: .76rem; }
+.gestion-panel { padding: 20px; margin-bottom: 20px; border: 1px solid var(--color-border); border-radius: 11px; background: var(--color-surface); box-shadow: var(--shadow-sm); }
+.gestion-panel h2 { margin: 0 0 16px; font-size: 1.15rem; }
+.gestion-panel label { display: flex; flex-direction: column; gap: 6px; font-size: .82rem; font-weight: 700; color: var(--color-text-secondary); }
+.gestion-grid { display: grid; grid-template-columns: repeat(2, minmax(220px, 1fr)); gap: 14px; }
+.gestion-check { flex-direction: row !important; align-items: center; align-self: end; padding-bottom: 10px; }
+.gestion-actions { display: flex; gap: 8px; margin: 18px 0 10px; }
+.gestion-permisos { display: grid; grid-template-columns: repeat(3, minmax(160px, 1fr)); gap: 12px; margin-top: 18px; }
+.gestion-permisos label { flex-direction: row; align-items: center; padding: 10px; border: 1px solid var(--color-border); border-radius: 7px; }
+.gestion-alert, .gestion-estado { padding: 12px 14px; margin-bottom: 16px; border-radius: 8px; border: 1px solid var(--color-border); }
+.gestion-alert-ok { color: #065f46; background: #ecfdf5; border-color: #a7f3d0; }
+.gestion-alert-error { color: #991b1b; background: #fef2f2; border-color: #fecaca; }
+.gestion-tabla-scroll { overflow-x: auto; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); }
+.gestion-tabla { width: 100%; border-collapse: collapse; font-size: .84rem; }
+.gestion-tabla th, .gestion-tabla td { padding: 11px 13px; text-align: left; border-bottom: 1px solid var(--color-border); white-space: nowrap; }
+.gestion-tabla thead th { color: var(--color-text-muted); background: #f8fafc; font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; }
+.gestion-tabla tbody tr:last-child td { border-bottom: none; }
+.gestion-actions-tabla { display: flex; gap: 6px; }
+.gestion-badge { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: .72rem; font-weight: 800; }
+.gestion-badge.activo { background: #dcfce7; color: #166534; }
+.gestion-badge.inactivo { background: #f1f5f9; color: #64748b; }
+.gestion-cards { display: grid; grid-template-columns: repeat(2, minmax(250px, 1fr)); gap: 16px; margin-bottom: 26px; }
+.gestion-card { display: block; padding: 20px; border: 1px solid var(--color-border); border-radius: 11px; background: var(--color-surface); color: inherit; text-decoration: none; box-shadow: var(--shadow-sm); }
+.gestion-card:hover { border-color: var(--color-primary); }
+.gestion-card h2 { margin: 0 0 6px; font-size: 1.1rem; }
+.gestion-card p { margin: 0; color: var(--color-text-muted); font-size: .85rem; }
+.validation-errors { color: #b91c1c; font-size: .82rem; }
+
+@media (max-width: 720px) {
+    .gestion-header { align-items: stretch; flex-direction: column; }
+    .gestion-search { flex-wrap: wrap; }
+    .gestion-grid, .gestion-permisos, .gestion-cards { grid-template-columns: 1fr; }
+}

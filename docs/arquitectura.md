@@ -14,60 +14,77 @@ Entity Framework Core
 SQL Server
 ```
 
-`SistemaGestionEmpresarial.Contracts` se utiliza exclusivamente para compartir contratos HTTP entre el cliente Blazor y la API. El cliente no referencia el proyecto de la API: se comunica con él únicamente por HTTP.
+La solución mantiene una arquitectura deliberadamente sencilla. No se añadieron proyectos Domain, Application o Infrastructure, CQRS, repositorios genéricos ni otras capas que no necesita el alcance académico actual.
 
-Por ahora se descartó una arquitectura completa con proyectos `Domain`, `Application` e `Infrastructure`, porque no es necesaria para el alcance actual. Los servicios y las entidades se agregarán cuando el equipo defina las funcionalidades y el modelo de datos.
+## Responsabilidades
 
-## Persistencia de Etapa I
+- `SistemaGestionEmpresarial.Web` ejecuta la interfaz en el navegador, conserva el JWT y llama a la API por HTTP.
+- `SistemaGestionEmpresarial.Api` contiene Controllers, Services, autorización, `AppDbContext`, entidades y migraciones.
+- `SistemaGestionEmpresarial.Contracts` comparte exclusivamente contratos HTTP entre cliente y servidor. Web no referencia Api.
+- SQL Server es la fuente persistente de usuarios, roles, permisos, intentos fallidos y bloqueos.
 
-La API utiliza `AppDbContext` para `Roles` y `Usuarios`. En Development aplica las migraciones pendientes y ejecuta un seed idempotente de tres roles y tres usuarios con contraseñas de ejemplo protegidas mediante `PasswordHasher<Usuario>`. Este seed no se ejecuta fuera de Development; las credenciales de ejemplo no deben utilizarse en producción. `database/SGECAR.sql` contiene el esquema generado por EF, mientras que los datos iniciales provienen del seeder.
+Los Controllers traducen HTTP a operaciones de aplicación. Los Services contienen las validaciones y usan `AppDbContext` directamente; no se agregó Repository Pattern ni Unit of Work personalizado porque EF Core ya cubre esas responsabilidades.
 
-La práctica no especifica si el rol Supervisor puede agregar. Se configuró `PuedeAgregar = false` provisionalmente; el equipo debe validar esta decisión con el profesor antes de considerar definitivos los permisos.
+## Flujo de autenticación
 
-## Control de acceso por roles
+```text
+Login.razor
+    ↓ POST /api/auth/login
+AuthController
+    ↓
+AuthService
+    ↓ consulta Usuario + Rol en SQL Server
+PasswordHasher verifica la contraseña
+    ↓
+JWT: identidad + rol + claims de permiso
+    ↓
+Blazor guarda la sesión y configura Authorization
+```
 
-La autorización se expresa en **permisos**, no en nombres de rol repartidos por el código. Los permisos disponibles son `Consultar`, `Agregar`, `Modificar`, `Eliminar`, `GestionarUsuarios` y `GestionarRoles`.
+Tres credenciales inválidas incrementan `IntentosFallidos` y establecen `BloqueadoHasta` durante un minuto. El bloqueo reside en SQL Server, por lo que persiste al recargar el navegador o reiniciar la API. Un acceso correcto después de expirar el bloqueo restablece ambos campos.
 
-La fuente de verdad es la tabla `Roles` de SQL Server. Al iniciar sesión, `AuthService` ya tiene cargado el `Rol` del usuario y convierte sus columnas booleanas (`PuedeConsultar`, `PuedeAgregar`, etc.) en claims `permiso` dentro del JWT.
+## Autorización por permisos
+
+Los permisos son `Consultar`, `Agregar`, `Modificar`, `Eliminar`, `GestionarUsuarios` y `GestionarRoles`. Su fuente de verdad son las columnas booleanas de `Roles`.
+
+`AuthService` transforma esas columnas en claims `permiso` del JWT. No existe una matriz de nombres de rol hardcodeada para autorizar. Un rol nuevo funciona con los permisos seleccionados y los cambios se reflejan cuando el usuario inicia sesión nuevamente y recibe un JWT nuevo.
 
 ```text
 SQL Server / Roles
         ↓
 AuthService
         ↓
-JWT: rol + claims "permiso"
+JWT con claims "permiso"
         ↓                         ↓
 Blazor: políticas            API: políticas
-AuthorizeView / rutas        [Permiso(...)] + IUsuarioActual
-(oculta la opción)           (rechaza la petición)
+menús y rutas                [Permiso(...)]
 ```
 
-### Fuente de verdad
+Blazor muestra u oculta elementos según las políticas, pero esa medida es solo de experiencia de usuario. La API constituye la barrera de seguridad y vuelve a validar cada petición. Está cerrada por omisión mediante `FallbackPolicy`; `api/auth/login` y `api/health` son las excepciones anónimas. Las respuestas 401 y 403 usan un contrato JSON comprensible.
 
-No existe una segunda matriz rol → permisos hardcodeada para decidir la autorización. Blazor y la API leen los mismos claims del JWT, que fueron generados a partir del registro de `Rol` en SQL Server.
+## Administración de usuarios y roles
 
-Esto permite que un rol nuevo funcione sin agregar su nombre al código: basta con que exista en la base de datos, tenga configuradas sus columnas de permisos y un usuario inicie sesión con ese rol.
+`UsuariosController` delega en `UsuariosService` el listado, búsqueda, consulta, creación, modificación y eliminación de usuarios. Todo el Controller exige `GestionarUsuarios`. El Service valida nombres únicos, roles existentes y contraseñas; utiliza `PasswordHasher<Usuario>` y nunca devuelve `PasswordHash`.
 
-Si los permisos de un rol cambian mientras un usuario ya tiene una sesión activa, el cambio se refleja en un nuevo JWT al volver a iniciar sesión.
+`RolesController` delega en `RolesService` el CRUD, búsqueda y actualización de permisos. Todo el Controller exige `GestionarRoles`. No permite eliminar un rol mientras tenga usuarios asignados.
 
-### Doble barrera
+En Web, `UsuariosApiService` y `RolesApiService` centralizan las llamadas HTTP de las páginas `/usuarios` y `/roles`.
 
-Ocultar opciones en la interfaz es comodidad, no seguridad. Toda acción se verifica también en el servidor:
+## Persistencia
 
-- **Blazor** registra una política por permiso y las usa en `AuthorizeView`, en el componente `VistaConPermiso` y en `[Authorize(Policy = ...)]` para proteger rutas.
-- **La API** registra las mismas políticas y las exige con `[Permiso(...)]` en los Controllers. `IUsuarioActual.ExigirPermisoAsync` permite repetir la comprobación dentro de Services cuando sea necesario.
-- La API está **cerrada por omisión** mediante `FallbackPolicy`. Los endpoints públicos `api/auth/login` y `api/health` están marcados con `[AllowAnonymous]`.
+`AppDbContext` administra `Usuarios` y `Roles`. En Development, la API ejecuta `Database.MigrateAsync()` y después un seeder idempotente. La migración `InitialUsersAndRoles` crea el esquema; [database/SGECAR.sql](../database/SGECAR.sql) corresponde al mismo modelo y no contiene datos iniciales.
 
-### Respuestas de acceso denegado
+El seeder crea tres roles y tres usuarios solo cuando faltan. Las contraseñas de desarrollo se procesan con `PasswordHasher<Usuario>` y no se almacenan en texto plano.
 
-`RespuestaDeAutorizacionHandler` transforma los 401 y 403 en un `AccesoDenegadoResponse` JSON que el cliente puede mostrar. `MiddlewareDePermisoDenegado` aplica el mismo formato a las denegaciones lanzadas desde Services.
+La decisión provisional documentada para Supervisor es `PuedeAgregar = false`, porque la consigna original no definía ese permiso.
 
-### Catálogo administrativo
+## Configuración local
 
-`GET api/permisos/catalogo` consulta directamente `AppDbContext.Roles` y construye la matriz visible a partir de las columnas booleanas de cada rol. El endpoint requiere `GestionarRoles`.
+- SQL Server: `localhost\SQLEXPRESS`
+- Base: `SistemaGestionEmpresarialDb`
+- API: `http://localhost:5080`
+- Blazor: `http://localhost:5180`
+- CORS: permite únicamente `http://localhost:5180` en la política de desarrollo.
+- `Jwt:Key`: User Secrets; nunca se versiona.
 
-### Verificación de la Etapa I
-
-Los endpoints de `api/operaciones` (`consultar`, `agregar`, `modificar`, `eliminar`) sirven para demostrar el control de acceso extremo a extremo. La página `/operaciones` permite incluso forzar una petición para demostrar que el backend rechaza una acción aunque el cliente intente ejecutarla.
-
-Estos endpoints son de demostración de permisos; no sustituyen los CRUD de negocio que se implementen en etapas posteriores.
+La Etapa I no modificó el esquema después de `InitialUsersAndRoles`, por lo que no requirió una migración adicional.
