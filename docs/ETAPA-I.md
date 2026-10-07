@@ -35,6 +35,7 @@ Supervisor conserva `PuedeAgregar = false` como decisión explícita de esta eta
 - Tres fallos provocan un bloqueo persistente de un minuto.
 - La API responde 401 cuando falta autenticación y 403 cuando falta permiso.
 - La interfaz adapta la navegación, pero los permisos siempre vuelven a comprobarse en el backend.
+- El usuario autenticado no puede eliminarse ni desactivarse a sí mismo; ambas reglas se validan en la API mediante su identificador del JWT.
 
 ## Base de datos
 

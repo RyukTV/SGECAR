@@ -10,6 +10,7 @@ namespace SistemaGestionEmpresarial.Api.Services;
 public interface IUsuarioActual
 {
     bool EstaAutenticado { get; }
+    int? Id { get; }
     string? NombreUsuario { get; }
     string? Rol { get; }
 
