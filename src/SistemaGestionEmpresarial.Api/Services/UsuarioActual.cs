@@ -17,6 +17,11 @@ public sealed class UsuarioActual : IUsuarioActual
 
     public bool EstaAutenticado => Principal?.Identity?.IsAuthenticated == true;
 
+    public int? Id => EstaAutenticado &&
+                      int.TryParse(Principal!.FindFirstValue(ClaimTypes.NameIdentifier), out var id)
+        ? id
+        : null;
+
     public string? NombreUsuario => EstaAutenticado ? Principal!.Identity!.Name : null;
 
     public string? Rol => Principal.ObtenerRol();

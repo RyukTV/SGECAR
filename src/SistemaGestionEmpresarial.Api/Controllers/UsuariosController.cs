@@ -76,6 +76,7 @@ public sealed class UsuariosController : ControllerBase
     [HttpDelete("{id:int}")]
     [ProducesResponseType(typeof(MensajeResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(MensajeResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(MensajeResponse), StatusCodes.Status409Conflict)]
     public async Task<ActionResult> Eliminar(int id, CancellationToken cancellationToken)
     {
         var resultado = await _usuariosService.EliminarAsync(id, cancellationToken);

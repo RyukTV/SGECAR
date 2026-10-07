@@ -60,3 +60,11 @@ La Etapa I no cambió el esquema después de `InitialUsersAndRoles`. `database/S
 ## Resultado final
 
 Todas las pruebas de cierre finalizaron en PASS. No quedó ningún fallo funcional conocido dentro del alcance de la Etapa I.
+
+## Corrección de protección del usuario autenticado — 2026-10-07
+
+- Autoeliminación: HTTP 409, mensaje comprensible y usuario conservado — PASS.
+- Autodesactivación: HTTP 409 y cuenta conservada como activa — PASS.
+- Edición propia manteniendo `Activo=true`: HTTP 200 — PASS.
+- Desactivación y eliminación de otro usuario: HTTP 200 — PASS.
+- La protección se ejecuta en el backend comparando el Id del recurso con el claim de identificador del JWT.

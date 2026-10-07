@@ -1,6 +1,7 @@
 @page "/administracion/usuarios"
 @attribute [Authorize(Policy = PoliticasDePermiso.GestionarUsuarios)]
 @inject UsuariosApiService UsuariosApi
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IJSRuntime JS
 
 <PageTitle>Gestión de Usuarios - SGECAR</PageTitle>
@@ -53,7 +54,7 @@
                         <InputText @bind-Value="formulario.Password" type="password" autocomplete="new-password" />
                     </label>
                     <label class="gestion-check">
-                        <InputCheckbox @bind-Value="formulario.Activo" /> Activo
+                        <InputCheckbox @bind-Value="formulario.Activo" disabled="@(idEdicion == idUsuarioActual)" /> Activo
                     </label>
                 </div>
                 <div class="gestion-actions">
@@ -88,7 +89,10 @@
                             <td><span class="gestion-badge @(usuario.Activo ? "activo" : "inactivo")">@(usuario.Activo ? "Activo" : "Inactivo")</span></td>
                             <td class="gestion-actions-tabla">
                                 <button class="gestion-btn gestion-btn-small" @onclick="() => PrepararEdicion(usuario)">Editar</button>
-                                <button class="gestion-btn gestion-btn-danger gestion-btn-small" @onclick="() => EliminarAsync(usuario)">Eliminar</button>
+                                <button class="gestion-btn gestion-btn-danger gestion-btn-small"
+                                        disabled="@(usuario.Id == idUsuarioActual)"
+                                        title="@(usuario.Id == idUsuarioActual ? "No puede eliminar el usuario con el que inició sesión." : null)"
+                                        @onclick="() => EliminarAsync(usuario)">Eliminar</button>
                             </td>
                         </tr>
                     }
@@ -102,6 +106,7 @@
     private List<UsuarioResponse> usuarios = [];
     private List<RolOpcionResponse> roles = [];
     private UsuarioForm formulario = new();
+    private int? idUsuarioActual;
     private int? idEdicion;
     private string buscar = string.Empty;
     private string? mensaje;
@@ -112,6 +117,12 @@
 
     protected override async Task OnInitializedAsync()
     {
+        var estadoAutenticacion = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var valorId = estadoAutenticacion.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? estadoAutenticacion.User.FindFirst("sub")?.Value;
+        if (int.TryParse(valorId, out var id))
+            idUsuarioActual = id;
+
         var resultadoRoles = await UsuariosApi.ObtenerRolesDisponiblesAsync();
         if (resultadoRoles.Exito)
             roles = resultadoRoles.Valor!.ToList();

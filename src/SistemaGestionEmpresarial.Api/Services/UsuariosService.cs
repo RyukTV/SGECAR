@@ -9,11 +9,13 @@ namespace SistemaGestionEmpresarial.Api.Services;
 public sealed class UsuariosService : IUsuariosService
 {
     private readonly AppDbContext _dbContext;
+    private readonly IUsuarioActual _usuarioActual;
     private readonly PasswordHasher<Usuario> _passwordHasher = new();
 
-    public UsuariosService(AppDbContext dbContext)
+    public UsuariosService(AppDbContext dbContext, IUsuarioActual usuarioActual)
     {
         _dbContext = dbContext;
+        _usuarioActual = usuarioActual;
     }
 
     public async Task<IReadOnlyList<UsuarioResponse>> ObtenerTodosAsync(
@@ -114,6 +116,10 @@ public sealed class UsuariosService : IUsuariosService
         ActualizarUsuarioRequest request,
         CancellationToken cancellationToken = default)
     {
+        if (id == _usuarioActual.Id && !request.Activo)
+            return ResultadoCrud<UsuarioResponse>.Conflicto(
+                "No puede desactivar el usuario con el que inició sesión.");
+
         var usuario = await _dbContext.Usuarios
             .Include(entidad => entidad.Rol)
             .SingleOrDefaultAsync(entidad => entidad.Id == id, cancellationToken);
@@ -151,6 +157,10 @@ public sealed class UsuariosService : IUsuariosService
 
     public async Task<ResultadoCrud<bool>> EliminarAsync(int id, CancellationToken cancellationToken = default)
     {
+        if (id == _usuarioActual.Id)
+            return ResultadoCrud<bool>.Conflicto(
+                "No puede eliminar el usuario con el que inició sesión.");
+
         var usuario = await _dbContext.Usuarios.SingleOrDefaultAsync(
             entidad => entidad.Id == id,
             cancellationToken);
