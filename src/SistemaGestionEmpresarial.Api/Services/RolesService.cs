@@ -36,7 +36,8 @@ public sealed class RolesService : IRolesService
                 PuedeEliminar = rol.PuedeEliminar,
                 PuedeConsultar = rol.PuedeConsultar,
                 PuedeGestionarUsuarios = rol.PuedeGestionarUsuarios,
-                PuedeGestionarRoles = rol.PuedeGestionarRoles
+                PuedeGestionarRoles = rol.PuedeGestionarRoles,
+                PuedeGestionarClientes = rol.PuedeGestionarClientes
             })
             .ToListAsync(cancellationToken);
     }
@@ -54,7 +55,8 @@ public sealed class RolesService : IRolesService
                 PuedeEliminar = rol.PuedeEliminar,
                 PuedeConsultar = rol.PuedeConsultar,
                 PuedeGestionarUsuarios = rol.PuedeGestionarUsuarios,
-                PuedeGestionarRoles = rol.PuedeGestionarRoles
+                PuedeGestionarRoles = rol.PuedeGestionarRoles,
+                PuedeGestionarClientes = rol.PuedeGestionarClientes
             })
             .SingleOrDefaultAsync(cancellationToken);
 
@@ -71,7 +73,8 @@ public sealed class RolesService : IRolesService
 
         var rol = new Rol { Nombre = nombre };
         AplicarPermisos(rol, request.PuedeAgregar, request.PuedeModificar, request.PuedeEliminar,
-            request.PuedeConsultar, request.PuedeGestionarUsuarios, request.PuedeGestionarRoles);
+            request.PuedeConsultar, request.PuedeGestionarUsuarios, request.PuedeGestionarRoles,
+            request.PuedeGestionarClientes);
 
         _dbContext.Roles.Add(rol);
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -98,7 +101,8 @@ public sealed class RolesService : IRolesService
 
         rol.Nombre = nombre;
         AplicarPermisos(rol, request.PuedeAgregar, request.PuedeModificar, request.PuedeEliminar,
-            request.PuedeConsultar, request.PuedeGestionarUsuarios, request.PuedeGestionarRoles);
+            request.PuedeConsultar, request.PuedeGestionarUsuarios, request.PuedeGestionarRoles,
+            request.PuedeGestionarClientes);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
         return ResultadoCrud<RolResponse>.Exito(Mapear(rol), "Rol actualizado correctamente.");
@@ -125,7 +129,8 @@ public sealed class RolesService : IRolesService
         bool eliminar,
         bool consultar,
         bool gestionarUsuarios,
-        bool gestionarRoles)
+        bool gestionarRoles,
+        bool gestionarClientes)
     {
         rol.PuedeAgregar = agregar;
         rol.PuedeModificar = modificar;
@@ -133,6 +138,7 @@ public sealed class RolesService : IRolesService
         rol.PuedeConsultar = consultar;
         rol.PuedeGestionarUsuarios = gestionarUsuarios;
         rol.PuedeGestionarRoles = gestionarRoles;
+        rol.PuedeGestionarClientes = gestionarClientes;
     }
 
     private static RolResponse Mapear(Rol rol) => new()
@@ -144,6 +150,7 @@ public sealed class RolesService : IRolesService
         PuedeEliminar = rol.PuedeEliminar,
         PuedeConsultar = rol.PuedeConsultar,
         PuedeGestionarUsuarios = rol.PuedeGestionarUsuarios,
-        PuedeGestionarRoles = rol.PuedeGestionarRoles
+        PuedeGestionarRoles = rol.PuedeGestionarRoles,
+        PuedeGestionarClientes = rol.PuedeGestionarClientes
     };
 }

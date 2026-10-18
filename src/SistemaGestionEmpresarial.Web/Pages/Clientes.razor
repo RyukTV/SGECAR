@@ -1,0 +1,268 @@
+@page "/administracion/clientes"
+@attribute [Authorize(Policy = PoliticasDePermiso.GestionarClientes)]
+@inject ClientesApiService ClientesApi
+@inject IJSRuntime JS
+
+<PageTitle>Gestión de Clientes - SGECAR</PageTitle>
+
+<div class="gestion-wrapper">
+    <header class="gestion-header">
+        <div>
+            <a href="/administracion" class="gestion-volver">← Administración</a>
+            <h1>Mantenimiento de Clientes</h1>
+            <p>Consulte y mantenga los datos de contacto de los clientes.</p>
+        </div>
+        <button class="gestion-btn gestion-btn-primary" @onclick="PrepararCreacion">Nuevo cliente</button>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(mensaje))
+    {
+        <div class="gestion-alert @(esError ? "gestion-alert-error" : "gestion-alert-ok")" role="alert">@mensaje</div>
+    }
+
+    <form class="gestion-panel clientes-filtros" @onsubmit="BuscarAsync" @onsubmit:preventDefault>
+        <h2>Buscar clientes</h2>
+        <div class="gestion-grid">
+            <label>ID
+                <input type="number" min="1" @bind="idFiltro" placeholder="Ej. 3" />
+            </label>
+            <label>Nombre / Apellido
+                <input @bind="buscar" placeholder="Ej. Manuel" />
+            </label>
+            <label>Correo
+                <input type="text" @bind="correoFiltro" placeholder="Ej. gmail.com" />
+            </label>
+        </div>
+        <div class="gestion-actions">
+            <button class="gestion-btn gestion-btn-primary" type="submit" disabled="@cargando">Buscar</button>
+            <button class="gestion-btn gestion-btn-light" type="button" @onclick="LimpiarFiltrosAsync" disabled="@cargando">Limpiar filtros</button>
+        </div>
+    </form>
+
+    @if (mostrarFormulario)
+    {
+        <section class="gestion-panel">
+            <h2>@(idEdicion.HasValue ? "Editar cliente" : "Crear cliente")</h2>
+            <EditForm Model="formulario" OnValidSubmit="GuardarAsync">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div class="gestion-grid">
+                    <label>Nombre
+                        <InputText @bind-Value="formulario.Nombre" />
+                    </label>
+                    <label>Apellido
+                        <InputText @bind-Value="formulario.Apellido" />
+                    </label>
+                    <label>Teléfono
+                        <InputText @bind-Value="formulario.Telefono" />
+                    </label>
+                    <label>Correo
+                        <InputText @bind-Value="formulario.Correo" type="email" />
+                    </label>
+                    <label>Dirección
+                        <InputText @bind-Value="formulario.Direccion" />
+                    </label>
+                </div>
+                <div class="gestion-actions">
+                    <button class="gestion-btn gestion-btn-primary" type="submit" disabled="@guardando">Guardar</button>
+                    <button class="gestion-btn gestion-btn-light" type="button" @onclick="LimpiarCampos">Limpiar campos</button>
+                    <button class="gestion-btn gestion-btn-light" type="button" @onclick="CancelarFormulario">Cancelar</button>
+                </div>
+            </EditForm>
+        </section>
+    }
+
+    @if (cargando)
+    {
+        <p class="gestion-estado" role="status">Cargando clientes…</p>
+    }
+    else if (clientes.Count == 0)
+    {
+        <p class="gestion-estado">No se encontraron clientes.</p>
+    }
+    else
+    {
+        <div class="gestion-tabla-scroll">
+            <table class="gestion-tabla clientes-tabla">
+                <thead>
+                    <tr>
+                        <th>ID</th><th>Nombre</th><th>Apellido</th><th>Teléfono</th><th>Correo</th><th>Dirección</th><th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var cliente in clientes)
+                    {
+                        <tr>
+                            <td>@cliente.Id</td>
+                            <td><strong>@cliente.Nombre</strong></td>
+                            <td>@cliente.Apellido</td>
+                            <td>@cliente.Telefono</td>
+                            <td>@cliente.Correo</td>
+                            <td>@cliente.Direccion</td>
+                            <td class="gestion-actions-tabla">
+                                <button class="gestion-btn gestion-btn-small" @onclick="() => PrepararEdicion(cliente)">Editar</button>
+                                <button class="gestion-btn gestion-btn-danger gestion-btn-small" @onclick="() => EliminarAsync(cliente)">Eliminar</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<ClienteResponse> clientes = [];
+    private ClienteForm formulario = new();
+    private int? idEdicion;
+    private int? idFiltro;
+    private string buscar = string.Empty;
+    private string correoFiltro = string.Empty;
+    private string? mensaje;
+    private bool esError;
+    private bool cargando = true;
+    private bool guardando;
+    private bool mostrarFormulario;
+
+    protected override Task OnInitializedAsync() => CargarClientesAsync();
+
+    private async Task CargarClientesAsync()
+    {
+        cargando = true;
+        var resultado = await ClientesApi.ObtenerAsync(idFiltro, buscar, correoFiltro);
+        if (resultado.Exito)
+            clientes = resultado.Valor!.ToList();
+        else
+            MostrarMensaje(resultado.Mensaje, true);
+        cargando = false;
+    }
+
+    private Task BuscarAsync() => CargarClientesAsync();
+
+    private async Task LimpiarFiltrosAsync()
+    {
+        idFiltro = null;
+        buscar = string.Empty;
+        correoFiltro = string.Empty;
+        await CargarClientesAsync();
+    }
+
+    private void PrepararCreacion()
+    {
+        idEdicion = null;
+        formulario = new ClienteForm();
+        mostrarFormulario = true;
+        mensaje = null;
+    }
+
+    private void PrepararEdicion(ClienteResponse cliente)
+    {
+        idEdicion = cliente.Id;
+        formulario = new ClienteForm
+        {
+            Nombre = cliente.Nombre,
+            Apellido = cliente.Apellido,
+            Telefono = cliente.Telefono,
+            Correo = cliente.Correo,
+            Direccion = cliente.Direccion
+        };
+        mostrarFormulario = true;
+        mensaje = null;
+    }
+
+    private void LimpiarCampos()
+    {
+        formulario = new ClienteForm();
+        mensaje = null;
+    }
+
+    private void CancelarFormulario()
+    {
+        mostrarFormulario = false;
+        formulario = new ClienteForm();
+        idEdicion = null;
+    }
+
+    private async Task GuardarAsync()
+    {
+        guardando = true;
+        ResultadoApi<ClienteResponse> resultado;
+
+        if (idEdicion.HasValue)
+        {
+            resultado = await ClientesApi.ActualizarAsync(idEdicion.Value, new ActualizarClienteRequest
+            {
+                Nombre = formulario.Nombre,
+                Apellido = formulario.Apellido,
+                Telefono = formulario.Telefono,
+                Correo = formulario.Correo,
+                Direccion = formulario.Direccion
+            });
+        }
+        else
+        {
+            resultado = await ClientesApi.CrearAsync(new CrearClienteRequest
+            {
+                Nombre = formulario.Nombre,
+                Apellido = formulario.Apellido,
+                Telefono = formulario.Telefono,
+                Correo = formulario.Correo,
+                Direccion = formulario.Direccion
+            });
+        }
+
+        guardando = false;
+        if (!resultado.Exito)
+        {
+            MostrarMensaje(resultado.Mensaje, true);
+            return;
+        }
+
+        MostrarMensaje(idEdicion.HasValue ? "Cliente actualizado correctamente." : "Cliente creado correctamente.", false);
+        mostrarFormulario = false;
+        formulario = new ClienteForm();
+        idEdicion = null;
+        await CargarClientesAsync();
+    }
+
+    private async Task EliminarAsync(ClienteResponse cliente)
+    {
+        if (!await JS.InvokeAsync<bool>("confirm", $"¿Eliminar al cliente '{cliente.Nombre} {cliente.Apellido}'?"))
+            return;
+
+        var resultado = await ClientesApi.EliminarAsync(cliente.Id);
+        MostrarMensaje(resultado.Mensaje, !resultado.Exito);
+        if (resultado.Exito)
+            await CargarClientesAsync();
+    }
+
+    private void MostrarMensaje(string texto, bool error)
+    {
+        mensaje = texto;
+        esError = error;
+    }
+
+    private sealed class ClienteForm
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "El nombre es obligatorio.")]
+        [System.ComponentModel.DataAnnotations.MaxLength(100, ErrorMessage = "El nombre no puede superar 100 caracteres.")]
+        public string Nombre { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "El apellido es obligatorio.")]
+        [System.ComponentModel.DataAnnotations.MaxLength(100, ErrorMessage = "El apellido no puede superar 100 caracteres.")]
+        public string Apellido { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "El teléfono es obligatorio.")]
+        [System.ComponentModel.DataAnnotations.MaxLength(30, ErrorMessage = "El teléfono no puede superar 30 caracteres.")]
+        public string Telefono { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "El correo es obligatorio.")]
+        [System.ComponentModel.DataAnnotations.EmailAddress(ErrorMessage = "El correo no tiene un formato válido.")]
+        [System.ComponentModel.DataAnnotations.MaxLength(150, ErrorMessage = "El correo no puede superar 150 caracteres.")]
+        public string Correo { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "La dirección es obligatoria.")]
+        [System.ComponentModel.DataAnnotations.MaxLength(250, ErrorMessage = "La dirección no puede superar 250 caracteres.")]
+        public string Direccion { get; set; } = string.Empty;
+    }
+}

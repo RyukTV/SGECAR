@@ -64,6 +64,7 @@ public sealed class PermisosController : ControllerBase
         if (rol.PuedeEliminar) permisos.Add(Permisos.Eliminar);
         if (rol.PuedeGestionarUsuarios) permisos.Add(Permisos.GestionarUsuarios);
         if (rol.PuedeGestionarRoles) permisos.Add(Permisos.GestionarRoles);
+        if (rol.PuedeGestionarClientes) permisos.Add(Permisos.GestionarClientes);
 
         return permisos.ToArray();
     }

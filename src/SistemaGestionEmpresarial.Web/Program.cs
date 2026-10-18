@@ -25,5 +25,6 @@ builder.Services.AddAutorizacionPorPermisos();
 builder.Services.AddScoped<PermisosApiService>();
 builder.Services.AddScoped<UsuariosApiService>();
 builder.Services.AddScoped<RolesApiService>();
+builder.Services.AddScoped<ClientesApiService>();
 
 await builder.Build().RunAsync();

@@ -18,7 +18,8 @@ public static class DatabaseSeeder
                 PuedeEliminar = true,
                 PuedeConsultar = true,
                 PuedeGestionarUsuarios = true,
-                PuedeGestionarRoles = true
+                PuedeGestionarRoles = true,
+                PuedeGestionarClientes = true
             },
             new Rol
             {
@@ -28,7 +29,8 @@ public static class DatabaseSeeder
                 PuedeEliminar = false,
                 PuedeConsultar = true,
                 PuedeGestionarUsuarios = false,
-                PuedeGestionarRoles = false
+                PuedeGestionarRoles = false,
+                PuedeGestionarClientes = false
             },
             new Rol
             {
@@ -38,7 +40,8 @@ public static class DatabaseSeeder
                 PuedeEliminar = false,
                 PuedeConsultar = true,
                 PuedeGestionarUsuarios = false,
-                PuedeGestionarRoles = false
+                PuedeGestionarRoles = false,
+                PuedeGestionarClientes = false
             }
         };
 

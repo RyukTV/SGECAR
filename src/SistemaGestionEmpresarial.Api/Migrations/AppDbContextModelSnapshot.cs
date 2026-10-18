@@ -22,6 +22,47 @@ namespace SistemaGestionEmpresarial.Api.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("SistemaGestionEmpresarial.Api.Entities.Cliente", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Apellido")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Correo")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("Direccion")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Telefono")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Correo")
+                        .IsUnique();
+
+                    b.ToTable("Clientes", (string)null);
+                });
+
             modelBuilder.Entity("SistemaGestionEmpresarial.Api.Entities.Rol", b =>
                 {
                     b.Property<int>("Id")
@@ -42,6 +83,9 @@ namespace SistemaGestionEmpresarial.Api.Migrations
                         .HasColumnType("bit");
 
                     b.Property<bool>("PuedeEliminar")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("PuedeGestionarClientes")
                         .HasColumnType("bit");
 
                     b.Property<bool>("PuedeGestionarRoles")

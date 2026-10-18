@@ -89,3 +89,62 @@ GO
 
 COMMIT;
 GO
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261018025318_AddClientesAndGestionarClientes'
+)
+BEGIN
+    ALTER TABLE [Roles] ADD [PuedeGestionarClientes] bit NOT NULL DEFAULT CAST(0 AS bit);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261018025318_AddClientesAndGestionarClientes'
+)
+BEGIN
+    UPDATE [Roles] SET [PuedeGestionarClientes] = 1 WHERE [Nombre] = N'Administrador'
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261018025318_AddClientesAndGestionarClientes'
+)
+BEGIN
+    CREATE TABLE [Clientes] (
+        [Id] int NOT NULL IDENTITY,
+        [Nombre] nvarchar(100) NOT NULL,
+        [Apellido] nvarchar(100) NOT NULL,
+        [Telefono] nvarchar(30) NOT NULL,
+        [Correo] nvarchar(150) NOT NULL,
+        [Direccion] nvarchar(250) NOT NULL,
+        CONSTRAINT [PK_Clientes] PRIMARY KEY ([Id])
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261018025318_AddClientesAndGestionarClientes'
+)
+BEGIN
+    CREATE UNIQUE INDEX [IX_Clientes_Correo] ON [Clientes] ([Correo]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261018025318_AddClientesAndGestionarClientes'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261018025318_AddClientesAndGestionarClientes', N'8.0.31');
+END;
+GO
+
+COMMIT;
+GO
