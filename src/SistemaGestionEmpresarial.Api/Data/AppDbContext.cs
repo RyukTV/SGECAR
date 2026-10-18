@@ -11,6 +11,7 @@ public sealed class AppDbContext : DbContext
 
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<Rol> Roles => Set<Rol>();
+    public DbSet<Cliente> Clientes => Set<Cliente>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -35,6 +36,18 @@ public sealed class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(usuario => usuario.RolId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Cliente>(entity =>
+        {
+            entity.ToTable("Clientes");
+            entity.HasKey(cliente => cliente.Id);
+            entity.Property(cliente => cliente.Nombre).IsRequired().HasMaxLength(100);
+            entity.Property(cliente => cliente.Apellido).IsRequired().HasMaxLength(100);
+            entity.Property(cliente => cliente.Telefono).IsRequired().HasMaxLength(30);
+            entity.Property(cliente => cliente.Correo).IsRequired().HasMaxLength(150);
+            entity.HasIndex(cliente => cliente.Correo).IsUnique();
+            entity.Property(cliente => cliente.Direccion).IsRequired().HasMaxLength(250);
         });
     }
 }

@@ -13,4 +13,5 @@ public sealed class ActualizarRolRequest
     public bool PuedeConsultar { get; set; }
     public bool PuedeGestionarUsuarios { get; set; }
     public bool PuedeGestionarRoles { get; set; }
+    public bool PuedeGestionarClientes { get; set; }
 }

@@ -7,7 +7,7 @@
 
 <div class="admin-wrapper">
     <header class="admin-header">
-        <h1>Administración de usuarios y roles</h1>
+        <h1>Administración del sistema</h1>
         <p>
             Sección reservada a los roles con permiso de gestión. La matriz proviene de la API,
             no del navegador: es la misma que el servidor aplica al autorizar cada operación.
@@ -24,7 +24,13 @@
         <VistaConPermiso Permiso="@Permisos.GestionarRoles">
             <a class="gestion-card" href="/administracion/roles">
                 <h2>Gestión de Roles</h2>
-                <p>Administrar roles y los seis permisos almacenados en SQL Server.</p>
+                <p>Administrar roles y los siete permisos almacenados en SQL Server.</p>
+            </a>
+        </VistaConPermiso>
+        <VistaConPermiso Permiso="@Permisos.GestionarClientes">
+            <a class="gestion-card" href="/administracion/clientes">
+                <h2>Gestión de Clientes</h2>
+                <p>Consultar, filtrar, crear, modificar y eliminar clientes.</p>
             </a>
         </VistaConPermiso>
     </div>
