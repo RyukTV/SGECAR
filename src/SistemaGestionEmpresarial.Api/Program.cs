@@ -21,6 +21,7 @@ builder.Services.AddScoped<IOperacionesService, OperacionesService>();
 builder.Services.AddScoped<IUsuariosService, UsuariosService>();
 builder.Services.AddScoped<IRolesService, RolesService>();
 builder.Services.AddScoped<IClientesService, ClientesService>();
+builder.Services.AddScoped<IProductosService, ProductosService>();
 
 var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("Falta la clave de seguridad Jwt:Key en la configuración.");

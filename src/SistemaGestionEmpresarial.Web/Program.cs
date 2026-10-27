@@ -26,5 +26,6 @@ builder.Services.AddScoped<PermisosApiService>();
 builder.Services.AddScoped<UsuariosApiService>();
 builder.Services.AddScoped<RolesApiService>();
 builder.Services.AddScoped<ClientesApiService>();
+builder.Services.AddScoped<ProductosApiService>();
 
 await builder.Build().RunAsync();

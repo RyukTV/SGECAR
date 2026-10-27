@@ -1,0 +1,389 @@
+@page "/administracion/productos"
+@page "/productos"
+@attribute [Authorize(Policy = PoliticasDePermiso.Consultar)]
+@inject ProductosApiService ProductosApi
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+
+<PageTitle>Mantenimiento de Productos - SGECAR</PageTitle>
+
+<div class="gestion-wrapper">
+    <header class="gestion-header">
+        <div>
+            <a href="/administracion" class="gestion-volver">← Administración</a>
+            <h1>Mantenimiento de Productos</h1>
+            <p>Consulte, filtre y gestione el catálogo de inventario y precios.</p>
+        </div>
+        @if (puedeAgregar)
+        {
+            <button class="gestion-btn gestion-btn-primary" @onclick="PrepararCreacion">Nuevo producto</button>
+        }
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(mensaje))
+    {
+        <div class="gestion-alert @(esError ? "gestion-alert-error" : "gestion-alert-ok")" role="alert">
+            @mensaje
+        </div>
+    }
+
+    <!-- Panel de Consultas, Buscadores y Filtros Dinámicos -->
+    <form class="gestion-panel productos-filtros" @onsubmit="BuscarAsync" @onsubmit:preventDefault>
+        <h2>Buscar y filtrar productos</h2>
+        <div class="gestion-grid">
+            <label>ID
+                <input type="number" min="1" @bind="idFiltro" placeholder="Ej. 1" />
+            </label>
+            <label>Nombre / Código
+                <input type="text" @bind="buscar" placeholder="Ej. Laptop o PROD-001" />
+            </label>
+            <label>Categoría
+                <select @bind="categoriaFiltro">
+                    <option value="">-- Todas las categorías --</option>
+                    @foreach (var cat in categorias)
+                    {
+                        <option value="@cat">@cat</option>
+                    }
+                </select>
+            </label>
+        </div>
+        <div class="gestion-actions">
+            <button class="gestion-btn gestion-btn-primary" type="submit" disabled="@cargando">Buscar</button>
+            <button class="gestion-btn gestion-btn-light" type="button" @onclick="LimpiarFiltrosAsync" disabled="@cargando">Limpiar filtros</button>
+        </div>
+    </form>
+
+    <!-- Panel de Formulario CRUD -->
+    @if (mostrarFormulario)
+    {
+        <section class="gestion-panel">
+            <h2>@(idEdicion.HasValue ? $"Editar producto #{idEdicion}" : "Crear nuevo producto")</h2>
+            <EditForm Model="formulario" OnValidSubmit="GuardarAsync">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div class="gestion-grid">
+                    @if (idEdicion.HasValue)
+                    {
+                        <label>ID
+                            <input type="text" value="@idEdicion.Value" disabled style="background:#f1f5f9; cursor:not-allowed;" />
+                        </label>
+                    }
+                    <label>Código *
+                        <InputText @bind-Value="formulario.Codigo" placeholder="Ej. PROD-100" />
+                    </label>
+                    <label>Nombre *
+                        <InputText @bind-Value="formulario.Nombre" placeholder="Ej. Monitor Curvo 34 Pulgadas" />
+                    </label>
+                    <label>Precio (mayor a 0) *
+                        <InputNumber @bind-Value="formulario.Precio" step="0.01" min="0.01" />
+                    </label>
+                    <label>Stock (mayor o igual a 0) *
+                        <InputNumber @bind-Value="formulario.Stock" step="1" min="0" />
+                    </label>
+                    <label>Categoría *
+                        <input list="lista-categorias-datalist" @bind="formulario.Categoria" placeholder="Seleccione o escriba..." />
+                        <datalist id="lista-categorias-datalist">
+                            @foreach (var cat in categorias)
+                            {
+                                <option value="@cat"></option>
+                            }
+                        </datalist>
+                    </label>
+                </div>
+                <div class="gestion-actions">
+                    <button class="gestion-btn gestion-btn-primary" type="submit" disabled="@guardando">Guardar</button>
+                    <button class="gestion-btn gestion-btn-light" type="button" @onclick="LimpiarCampos">Limpiar campos</button>
+                    <button class="gestion-btn gestion-btn-light" type="button" @onclick="CancelarFormulario">Cancelar</button>
+                </div>
+            </EditForm>
+        </section>
+    }
+
+    <!-- Visualización DataGridView -->
+    @if (cargando)
+    {
+        <p class="gestion-estado" role="status">Cargando productos…</p>
+    }
+    else if (productos.Count == 0)
+    {
+        <p class="gestion-estado">No se encontraron productos con los criterios seleccionados.</p>
+    }
+    else
+    {
+        <div class="gestion-tabla-scroll">
+            <table class="gestion-tabla productos-tabla">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Código</th>
+                        <th>Nombre</th>
+                        <th>Categoría</th>
+                        <th>Precio</th>
+                        <th>Stock</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var prod in productos)
+                    {
+                        <tr>
+                            <td>@prod.Id</td>
+                            <td><code>@prod.Codigo</code></td>
+                            <td><strong>@prod.Nombre</strong></td>
+                            <td>@prod.Categoria</td>
+                            <td>$@prod.Precio.ToString("N2")</td>
+                            <td>
+                                @if (prod.Stock == 0)
+                                {
+                                    <span class="gestion-badge inactivo" style="background:#fee2e2; color:#991b1b;">Agotado (0)</span>
+                                }
+                                else if (prod.Stock <= 5)
+                                {
+                                    <span class="gestion-badge" style="background:#fef3c7; color:#92400e;">Bajo stock (@prod.Stock)</span>
+                                }
+                                else
+                                {
+                                    <span class="gestion-badge activo">@prod.Stock unid.</span>
+                                }
+                            </td>
+                            <td class="gestion-actions-tabla">
+                                @if (puedeModificar)
+                                {
+                                    <button class="gestion-btn gestion-btn-small" @onclick="() => PrepararEdicion(prod)">Editar</button>
+                                }
+                                @if (puedeEliminar)
+                                {
+                                    <button class="gestion-btn gestion-btn-danger gestion-btn-small" @onclick="() => EliminarAsync(prod)">Eliminar</button>
+                                }
+                                @if (!puedeModificar && !puedeEliminar)
+                                {
+                                    <span style="font-size:0.75rem; color:#94a3b8; font-style:italic;">Solo consulta</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<ProductoResponse> productos = [];
+    private List<string> categorias = [];
+    private ProductoForm formulario = new();
+
+    private int? idEdicion;
+    private int? idFiltro;
+    private string buscar = string.Empty;
+    private string categoriaFiltro = string.Empty;
+
+    private string? mensaje;
+    private bool esError;
+    private bool cargando = true;
+    private bool guardando;
+    private bool mostrarFormulario;
+
+    private bool puedeAgregar;
+    private bool puedeModificar;
+    private bool puedeEliminar;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        puedeAgregar = user.TienePermiso(Permisos.Agregar);
+        puedeModificar = user.TienePermiso(Permisos.Modificar);
+        puedeEliminar = user.TienePermiso(Permisos.Eliminar);
+
+        await Task.WhenAll(CargarProductosAsync(), CargarCategoriasAsync());
+    }
+
+    private async Task CargarCategoriasAsync()
+    {
+        var resultado = await ProductosApi.ObtenerCategoriasAsync();
+        if (resultado.Exito && resultado.Valor is not null)
+        {
+            categorias = resultado.Valor.ToList();
+        }
+    }
+
+    private async Task CargarProductosAsync()
+    {
+        cargando = true;
+        var resultado = await ProductosApi.ObtenerAsync(idFiltro, buscar, categoriaFiltro);
+        if (resultado.Exito)
+        {
+            productos = resultado.Valor!.ToList();
+        }
+        else
+        {
+            MostrarMensaje(resultado.Mensaje, true);
+        }
+        cargando = false;
+    }
+
+    private Task BuscarAsync() => CargarProductosAsync();
+
+    private async Task LimpiarFiltrosAsync()
+    {
+        idFiltro = null;
+        buscar = string.Empty;
+        categoriaFiltro = string.Empty;
+        await CargarProductosAsync();
+    }
+
+    private void PrepararCreacion()
+    {
+        if (!puedeAgregar)
+        {
+            MostrarMensaje("No tiene permisos suficientes para agregar productos.", true);
+            return;
+        }
+
+        idEdicion = null;
+        formulario = new ProductoForm();
+        mostrarFormulario = true;
+        mensaje = null;
+    }
+
+    private void PrepararEdicion(ProductoResponse prod)
+    {
+        if (!puedeModificar)
+        {
+            MostrarMensaje("No tiene permisos suficientes para modificar productos.", true);
+            return;
+        }
+
+        idEdicion = prod.Id;
+        formulario = new ProductoForm
+        {
+            Codigo = prod.Codigo,
+            Nombre = prod.Nombre,
+            Precio = prod.Precio,
+            Stock = prod.Stock,
+            Categoria = prod.Categoria
+        };
+        mostrarFormulario = true;
+        mensaje = null;
+    }
+
+    private void LimpiarCampos()
+    {
+        formulario = new ProductoForm();
+        mensaje = null;
+    }
+
+    private void CancelarFormulario()
+    {
+        mostrarFormulario = false;
+        formulario = new ProductoForm();
+        idEdicion = null;
+    }
+
+    private async Task GuardarAsync()
+    {
+        if (idEdicion.HasValue && !puedeModificar)
+        {
+            MostrarMensaje("No tiene permisos suficientes para modificar productos.", true);
+            return;
+        }
+
+        if (!idEdicion.HasValue && !puedeAgregar)
+        {
+            MostrarMensaje("No tiene permisos suficientes para agregar productos.", true);
+            return;
+        }
+
+        guardando = true;
+        ResultadoApi<ProductoResponse> resultado;
+
+        if (idEdicion.HasValue)
+        {
+            resultado = await ProductosApi.ActualizarAsync(idEdicion.Value, new ActualizarProductoRequest
+            {
+                Codigo = formulario.Codigo,
+                Nombre = formulario.Nombre,
+                Precio = formulario.Precio,
+                Stock = formulario.Stock,
+                Categoria = formulario.Categoria
+            });
+        }
+        else
+        {
+            resultado = await ProductosApi.CrearAsync(new CrearProductoRequest
+            {
+                Codigo = formulario.Codigo,
+                Nombre = formulario.Nombre,
+                Precio = formulario.Precio,
+                Stock = formulario.Stock,
+                Categoria = formulario.Categoria
+            });
+        }
+
+        guardando = false;
+
+        if (!resultado.Exito)
+        {
+            MostrarMensaje(resultado.Mensaje, true);
+            return;
+        }
+
+        MostrarMensaje(idEdicion.HasValue ? "Producto actualizado correctamente." : "Producto creado correctamente.", false);
+        mostrarFormulario = false;
+        formulario = new ProductoForm();
+        idEdicion = null;
+
+        await Task.WhenAll(CargarProductosAsync(), CargarCategoriasAsync());
+    }
+
+    private async Task EliminarAsync(ProductoResponse prod)
+    {
+        if (!puedeEliminar)
+        {
+            MostrarMensaje("No tiene permisos suficientes para eliminar productos.", true);
+            return;
+        }
+
+        if (!await JS.InvokeAsync<bool>("confirm", $"¿Está seguro de eliminar el producto '{prod.Codigo} - {prod.Nombre}'?"))
+        {
+            return;
+        }
+
+        var resultado = await ProductosApi.EliminarAsync(prod.Id);
+        MostrarMensaje(resultado.Mensaje, !resultado.Exito);
+
+        if (resultado.Exito)
+        {
+            await Task.WhenAll(CargarProductosAsync(), CargarCategoriasAsync());
+        }
+    }
+
+    private void MostrarMensaje(string texto, bool error)
+    {
+        mensaje = texto;
+        esError = error;
+    }
+
+    private sealed class ProductoForm
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "El código es obligatorio.")]
+        [System.ComponentModel.DataAnnotations.MaxLength(50, ErrorMessage = "El código no puede superar 50 caracteres.")]
+        public string Codigo { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "El nombre es obligatorio.")]
+        [System.ComponentModel.DataAnnotations.MaxLength(150, ErrorMessage = "El nombre no puede superar 150 caracteres.")]
+        public string Nombre { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Range(0.01, double.MaxValue, ErrorMessage = "El precio debe ser mayor que 0.")]
+        public decimal Precio { get; set; } = 1.00m;
+
+        [System.ComponentModel.DataAnnotations.Range(0, int.MaxValue, ErrorMessage = "El stock debe ser mayor o igual a 0.")]
+        public int Stock { get; set; } = 0;
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "La categoría es obligatoria.")]
+        [System.ComponentModel.DataAnnotations.MaxLength(100, ErrorMessage = "La categoría no puede superar 100 caracteres.")]
+        public string Categoria { get; set; } = string.Empty;
+    }
+}

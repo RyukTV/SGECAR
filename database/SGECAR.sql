@@ -89,6 +89,7 @@ GO
 
 COMMIT;
 GO
+
 BEGIN TRANSACTION;
 GO
 
@@ -148,3 +149,46 @@ GO
 
 COMMIT;
 GO
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261027175429_AddProductos'
+)
+BEGIN
+    CREATE TABLE [Productos] (
+        [Id] int NOT NULL IDENTITY,
+        [Codigo] nvarchar(50) NOT NULL,
+        [Nombre] nvarchar(150) NOT NULL,
+        [Precio] decimal(18,2) NOT NULL,
+        [Stock] int NOT NULL,
+        [Categoria] nvarchar(100) NOT NULL,
+        CONSTRAINT [PK_Productos] PRIMARY KEY ([Id])
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261027175429_AddProductos'
+)
+BEGIN
+    CREATE UNIQUE INDEX [IX_Productos_Codigo] ON [Productos] ([Codigo]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261027175429_AddProductos'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261027175429_AddProductos', N'8.0.31');
+END;
+GO
+
+COMMIT;
+GO
+

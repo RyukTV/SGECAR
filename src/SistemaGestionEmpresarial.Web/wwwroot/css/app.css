@@ -137,7 +137,7 @@ body {
 .gestion-volver { color: var(--color-primary); text-decoration: none; font-size: .82rem; font-weight: 700; }
 .gestion-search { display: flex; gap: 8px; margin-bottom: 18px; }
 .gestion-search input { flex: 1; min-width: 220px; }
-.gestion-search input, .gestion-panel input[type="text"], .gestion-panel input[type="password"], .gestion-panel select {
+.gestion-search input, .gestion-panel input[type="text"], .gestion-panel input[type="number"], .gestion-panel input[type="password"], .gestion-panel select {
     padding: 9px 11px; border: 1px solid var(--color-border); border-radius: 7px; font: inherit; background: #fff;
 }
 .gestion-btn { border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text-primary); border-radius: 7px; padding: 8px 13px; font: inherit; font-size: .84rem; font-weight: 700; cursor: pointer; }
