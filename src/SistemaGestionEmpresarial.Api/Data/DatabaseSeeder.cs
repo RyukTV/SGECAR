@@ -88,53 +88,5 @@ public static class DatabaseSeeder
         }
 
         await dbContext.SaveChangesAsync();
-
-        if (!await dbContext.Productos.AnyAsync())
-        {
-            dbContext.Productos.AddRange(
-                new Producto
-                {
-                    Codigo = "PROD-001",
-                    Nombre = "Laptop Dell Inspiron 15",
-                    Precio = 799.99m,
-                    Stock = 15,
-                    Categoria = "Tecnología"
-                },
-                new Producto
-                {
-                    Codigo = "PROD-002",
-                    Nombre = "Monitor Samsung 27 Pulgadas",
-                    Precio = 229.50m,
-                    Stock = 8,
-                    Categoria = "Tecnología"
-                },
-                new Producto
-                {
-                    Codigo = "PROD-003",
-                    Nombre = "Teclado Mecánico RGB",
-                    Precio = 55.00m,
-                    Stock = 25,
-                    Categoria = "Accesorios"
-                },
-                new Producto
-                {
-                    Codigo = "PROD-004",
-                    Nombre = "Silla Ergonómica de Oficina",
-                    Precio = 185.00m,
-                    Stock = 12,
-                    Categoria = "Mobiliario"
-                },
-                new Producto
-                {
-                    Codigo = "PROD-005",
-                    Nombre = "Mouse Inalámbrico Logitech",
-                    Precio = 29.99m,
-                    Stock = 40,
-                    Categoria = "Accesorios"
-                }
-            );
-
-            await dbContext.SaveChangesAsync();
-        }
     }
 }
