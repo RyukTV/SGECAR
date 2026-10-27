@@ -12,6 +12,7 @@ public sealed class AppDbContext : DbContext
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<Rol> Roles => Set<Rol>();
     public DbSet<Cliente> Clientes => Set<Cliente>();
+    public DbSet<Producto> Productos => Set<Producto>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -48,6 +49,18 @@ public sealed class AppDbContext : DbContext
             entity.Property(cliente => cliente.Correo).IsRequired().HasMaxLength(150);
             entity.HasIndex(cliente => cliente.Correo).IsUnique();
             entity.Property(cliente => cliente.Direccion).IsRequired().HasMaxLength(250);
+        });
+
+        modelBuilder.Entity<Producto>(entity =>
+        {
+            entity.ToTable("Productos");
+            entity.HasKey(producto => producto.Id);
+            entity.Property(producto => producto.Codigo).IsRequired().HasMaxLength(50);
+            entity.HasIndex(producto => producto.Codigo).IsUnique();
+            entity.Property(producto => producto.Nombre).IsRequired().HasMaxLength(150);
+            entity.Property(producto => producto.Precio).IsRequired().HasPrecision(18, 2);
+            entity.Property(producto => producto.Stock).IsRequired();
+            entity.Property(producto => producto.Categoria).IsRequired().HasMaxLength(100);
         });
     }
 }
