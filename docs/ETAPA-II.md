@@ -21,7 +21,7 @@ La página `/administracion/clientes` permite consultar, filtrar, registrar, mod
 
 ---
 
-## 2. Módulo de Productos (Responsable: Bianca Castro)
+## 2. Módulo de Productos
 
 Cada producto contiene los campos:
 - **`Id`**: identificador único autoincremental (PK).
@@ -52,7 +52,7 @@ Se utilizan los permisos ya existentes en el sistema:
 - Stock mayor o igual a 0.
 - Categoría obligatoria.
 
-### Interfaz de Usuario (`/administracion/productos` o `/productos`):
+### Interfaz de Usuario (`/administracion/productos`):
 - **Buscadores y filtros**:
   - Buscador por ID.
   - Buscador por Nombre / Código.
@@ -74,4 +74,3 @@ Se utilizan los permisos ya existentes en el sistema:
 
 - La migración `20261027175429_AddProductos` crea la tabla `Productos` con sus restricciones y el índice único `IX_Productos_Codigo`.
 - El script SQL idempotente general se actualizó en [`database/SGECAR.sql`](../database/SGECAR.sql).
-- El seeder de desarrollo (`DatabaseSeeder.cs`) genera automáticamente productos de prueba con diversas categorías y niveles de stock.
