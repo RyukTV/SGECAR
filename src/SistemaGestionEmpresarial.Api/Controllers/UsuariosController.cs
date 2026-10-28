@@ -23,9 +23,12 @@ public sealed class UsuariosController : ControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(IReadOnlyList<UsuarioResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<UsuarioResponse>>> ObtenerTodos(
+        [FromQuery] int? id,
         [FromQuery] string? buscar,
+        [FromQuery] int? rolId,
+        [FromQuery] bool? activo,
         CancellationToken cancellationToken) =>
-        Ok(await _usuariosService.ObtenerTodosAsync(buscar, cancellationToken));
+        Ok(await _usuariosService.ObtenerTodosAsync(id, buscar, rolId, activo, cancellationToken));
 
     [HttpGet("roles-disponibles")]
     [ProducesResponseType(typeof(IReadOnlyList<RolOpcionResponse>), StatusCodes.Status200OK)]

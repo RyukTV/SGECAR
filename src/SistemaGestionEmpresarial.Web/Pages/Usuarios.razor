@@ -21,10 +21,36 @@
         <div class="gestion-alert @(esError ? "gestion-alert-error" : "gestion-alert-ok")" role="alert">@mensaje</div>
     }
 
-    <form class="gestion-search" @onsubmit="BuscarAsync" @onsubmit:preventDefault>
-        <input @bind="buscar" placeholder="Buscar por usuario, nombre completo o rol" aria-label="Buscar usuarios" />
-        <button class="gestion-btn" type="submit" disabled="@cargando">Buscar</button>
-        <button class="gestion-btn gestion-btn-light" type="button" @onclick="LimpiarBusquedaAsync" disabled="@cargando">Limpiar</button>
+    <form class="gestion-panel usuarios-filtros" @onsubmit="BuscarAsync" @onsubmit:preventDefault>
+        <h2>Buscar y filtrar usuarios</h2>
+        <div class="gestion-grid">
+            <label>ID
+                <input type="number" min="1" @bind="idFiltro" placeholder="Ej. 2" />
+            </label>
+            <label>Usuario / Nombre / Rol
+                <input type="text" @bind="buscar" placeholder="Buscar por usuario, nombre completo o rol" />
+            </label>
+            <label>Rol
+                <select @bind="rolFiltro">
+                    <option value="0">-- Todos los roles --</option>
+                    @foreach (var rol in roles)
+                    {
+                        <option value="@rol.Id">@rol.Nombre</option>
+                    }
+                </select>
+            </label>
+            <label>Estado
+                <select @bind="estadoFiltro">
+                    <option value="@EstadoTodos">Todos</option>
+                    <option value="@EstadoActivos">Activos</option>
+                    <option value="@EstadoInactivos">Inactivos</option>
+                </select>
+            </label>
+        </div>
+        <div class="gestion-actions">
+            <button class="gestion-btn gestion-btn-primary" type="submit" disabled="@cargando">Buscar</button>
+            <button class="gestion-btn gestion-btn-light" type="button" @onclick="LimpiarFiltrosAsync" disabled="@cargando">Limpiar filtros</button>
+        </div>
     </form>
 
     @if (mostrarFormulario)
@@ -59,6 +85,7 @@
                 </div>
                 <div class="gestion-actions">
                     <button class="gestion-btn gestion-btn-primary" type="submit" disabled="@guardando">Guardar</button>
+                    <button class="gestion-btn gestion-btn-light" type="button" @onclick="LimpiarCampos">Limpiar campos</button>
                     <button class="gestion-btn gestion-btn-light" type="button" @onclick="CancelarFormulario">Cancelar</button>
                 </div>
             </EditForm>
@@ -78,11 +105,12 @@
     {
         <div class="gestion-tabla-scroll">
             <table class="gestion-tabla">
-                <thead><tr><th>Usuario</th><th>Nombre completo</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <thead><tr><th>ID</th><th>Usuario</th><th>Nombre completo</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead>
                 <tbody>
                     @foreach (var usuario in usuarios)
                     {
                         <tr>
+                            <td>@usuario.Id</td>
                             <td><strong>@usuario.NombreUsuario</strong></td>
                             <td>@usuario.NombreCompleto</td>
                             <td>@usuario.NombreRol</td>
@@ -108,12 +136,19 @@
     private UsuarioForm formulario = new();
     private int? idUsuarioActual;
     private int? idEdicion;
+    private int? idFiltro;
     private string buscar = string.Empty;
+    private int rolFiltro;
+    private string estadoFiltro = EstadoTodos;
     private string? mensaje;
     private bool esError;
     private bool cargando = true;
     private bool guardando;
     private bool mostrarFormulario;
+
+    private const string EstadoTodos = "todos";
+    private const string EstadoActivos = "activos";
+    private const string EstadoInactivos = "inactivos";
 
     protected override async Task OnInitializedAsync()
     {
@@ -135,7 +170,17 @@
     private async Task CargarUsuariosAsync()
     {
         cargando = true;
-        var resultado = await UsuariosApi.ObtenerAsync(buscar);
+        bool? activo = estadoFiltro switch
+        {
+            EstadoActivos => true,
+            EstadoInactivos => false,
+            _ => null
+        };
+        var resultado = await UsuariosApi.ObtenerAsync(
+            idFiltro,
+            buscar,
+            rolFiltro > 0 ? rolFiltro : null,
+            activo);
         if (resultado.Exito)
             usuarios = resultado.Valor!.ToList();
         else
@@ -145,9 +190,12 @@
 
     private Task BuscarAsync() => CargarUsuariosAsync();
 
-    private async Task LimpiarBusquedaAsync()
+    private async Task LimpiarFiltrosAsync()
     {
+        idFiltro = null;
         buscar = string.Empty;
+        rolFiltro = 0;
+        estadoFiltro = EstadoTodos;
         await CargarUsuariosAsync();
     }
 
@@ -170,6 +218,12 @@
             Activo = usuario.Activo
         };
         mostrarFormulario = true;
+        mensaje = null;
+    }
+
+    private void LimpiarCampos()
+    {
+        formulario = new UsuarioForm { Activo = true };
         mensaje = null;
     }
 
