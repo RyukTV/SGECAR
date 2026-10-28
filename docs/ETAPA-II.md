@@ -1,8 +1,8 @@
-# Etapa II: Mantenimiento de Clientes y Productos
+# Etapa II: Mantenimiento de Clientes, Productos y Usuarios
 
 ## Objetivo
 
-Esta etapa incorpora los módulos de mantenimiento de clientes y productos reutilizando la arquitectura de la solución: Blazor WebAssembly consume la API mediante HTTP/JSON; la API aplica autenticación y autorización por permisos, ejecuta la lógica de servicios y persiste los datos con Entity Framework Core y SQL Server.
+Esta etapa incorpora los módulos de mantenimiento de clientes y productos y completa las consultas avanzadas del mantenimiento de usuarios, reutilizando la arquitectura de la solución: Blazor WebAssembly consume la API mediante HTTP/JSON; la API aplica autenticación y autorización por permisos, ejecuta la lógica de servicios y persiste los datos con Entity Framework Core y SQL Server.
 
 ---
 
