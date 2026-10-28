@@ -19,10 +19,23 @@ public sealed class UsuariosService : IUsuariosService
     }
 
     public async Task<IReadOnlyList<UsuarioResponse>> ObtenerTodosAsync(
+        int? id,
         string? buscar,
+        int? rolId,
+        bool? activo,
         CancellationToken cancellationToken = default)
     {
         var query = _dbContext.Usuarios.AsNoTracking().Include(usuario => usuario.Rol).AsQueryable();
+
+        // Los filtros son opcionales y se combinan entre sí (AND).
+        if (id.HasValue)
+            query = query.Where(usuario => usuario.Id == id.Value);
+
+        if (rolId.HasValue)
+            query = query.Where(usuario => usuario.RolId == rolId.Value);
+
+        if (activo.HasValue)
+            query = query.Where(usuario => usuario.Activo == activo.Value);
 
         if (!string.IsNullOrWhiteSpace(buscar))
         {

@@ -14,12 +14,20 @@ public sealed class UsuariosApiService
     }
 
     public async Task<ResultadoApi<IReadOnlyList<UsuarioResponse>>> ObtenerAsync(
+        int? id,
         string? buscar,
+        int? rolId,
+        bool? activo,
         CancellationToken cancellationToken = default)
     {
-        var ruta = string.IsNullOrWhiteSpace(buscar)
-            ? "api/usuarios"
-            : $"api/usuarios?buscar={Uri.EscapeDataString(buscar.Trim())}";
+        var parametros = new List<string>();
+        if (id.HasValue) parametros.Add($"id={id.Value}");
+        if (!string.IsNullOrWhiteSpace(buscar))
+            parametros.Add($"buscar={Uri.EscapeDataString(buscar.Trim())}");
+        if (rolId.HasValue) parametros.Add($"rolId={rolId.Value}");
+        if (activo.HasValue) parametros.Add($"activo={(activo.Value ? "true" : "false")}");
+
+        var ruta = parametros.Count == 0 ? "api/usuarios" : $"api/usuarios?{string.Join("&", parametros)}";
         return await ObtenerListaAsync<UsuarioResponse>(ruta, "No fue posible obtener los usuarios.", cancellationToken);
     }
 

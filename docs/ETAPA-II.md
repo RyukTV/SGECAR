@@ -1,8 +1,8 @@
-# Etapa II: Mantenimiento de Clientes y Productos
+# Etapa II: Mantenimiento de Clientes, Productos y Usuarios
 
 ## Objetivo
 
-Esta etapa incorpora los módulos de mantenimiento de clientes y productos reutilizando la arquitectura de la solución: Blazor WebAssembly consume la API mediante HTTP/JSON; la API aplica autenticación y autorización por permisos, ejecuta la lógica de servicios y persiste los datos con Entity Framework Core y SQL Server.
+Esta etapa incorpora los módulos de mantenimiento de clientes y productos y completa las consultas avanzadas del mantenimiento de usuarios, reutilizando la arquitectura de la solución: Blazor WebAssembly consume la API mediante HTTP/JSON; la API aplica autenticación y autorización por permisos, ejecuta la lógica de servicios y persiste los datos con Entity Framework Core y SQL Server.
 
 ---
 
@@ -70,7 +70,28 @@ Se utilizan los permisos ya existentes en el sistema:
 
 ---
 
-## 3. Base de Datos
+## 3. Módulo de Usuarios: búsqueda y filtros
+
+El CRUD de usuarios de la Etapa I se mantiene sin cambios (crear, editar, eliminar, cambiar rol y estado, y todas sus validaciones, incluida la protección del usuario autenticado). Esta etapa agrega consulta avanzada. No requiere cambios de esquema ni migración.
+
+### Endpoint `GET /api/usuarios`
+Todos los parámetros son opcionales y, cuando se envían varios, se combinan con AND. Requiere el permiso `GestionarUsuarios`.
+- `id`: devuelve únicamente el usuario con ese identificador.
+- `buscar`: texto contenido en usuario, nombre completo o nombre del rol (comportamiento previo).
+- `rolId`: usuarios que pertenecen a ese rol.
+- `activo`: `true` para activos, `false` para inactivos; si se omite, devuelve ambos.
+
+Los valores de `rolId` provienen de los roles guardados en la base de datos, mediante `GET /api/usuarios/roles-disponibles`.
+
+### Interfaz de Usuario (`/administracion/usuarios`)
+- **Filtros**: ID, texto (usuario / nombre / rol), ComboBox de Rol alimentado con los roles de la base de datos, y ComboBox de Estado con `Todos`, `Activos` e `Inactivos`. Los filtros se pueden combinar.
+- **Botón "Buscar"** aplica los filtros y **"Limpiar filtros"** los restablece y recarga la lista completa.
+- **Botón "Limpiar campos"** en el formulario de creación/edición vacía los campos (el estado vuelve a Activo) y los mensajes de validación, sin cerrar el formulario ni guardar.
+- La tabla muestra la columna ID.
+
+---
+
+## 4. Base de Datos
 
 - La migración `20261027175429_AddProductos` crea la tabla `Productos` con sus restricciones y el índice único `IX_Productos_Codigo`.
 - El script SQL idempotente general se actualizó en [`database/SGECAR.sql`](../database/SGECAR.sql).
