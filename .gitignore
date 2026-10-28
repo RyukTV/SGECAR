@@ -20,6 +20,3 @@ secrets.json
 *.log
 *.tmp
 *.bak
-
-# Archivos de Claude Code y herramientas de IA
-CLAUDE.md
