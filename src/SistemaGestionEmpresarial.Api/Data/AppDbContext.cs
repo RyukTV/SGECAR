@@ -13,6 +13,7 @@ public sealed class AppDbContext : DbContext
     public DbSet<Rol> Roles => Set<Rol>();
     public DbSet<Cliente> Clientes => Set<Cliente>();
     public DbSet<Producto> Productos => Set<Producto>();
+    public DbSet<CategoriaProducto> CategoriasProducto => Set<CategoriaProducto>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -58,9 +59,19 @@ public sealed class AppDbContext : DbContext
             entity.Property(producto => producto.Codigo).IsRequired().HasMaxLength(50);
             entity.HasIndex(producto => producto.Codigo).IsUnique();
             entity.Property(producto => producto.Nombre).IsRequired().HasMaxLength(150);
-            entity.Property(producto => producto.Precio).IsRequired().HasPrecision(18, 2);
-            entity.Property(producto => producto.Stock).IsRequired();
-            entity.Property(producto => producto.Categoria).IsRequired().HasMaxLength(100);
+            entity.Property(producto => producto.Precio).HasPrecision(18, 2);
+            entity.HasOne(producto => producto.Categoria)
+                .WithMany(categoria => categoria.Productos)
+                .HasForeignKey(producto => producto.CategoriaId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<CategoriaProducto>(entity =>
+        {
+            entity.ToTable("CategoriasProducto");
+            entity.HasKey(categoria => categoria.Id);
+            entity.Property(categoria => categoria.Nombre).IsRequired().HasMaxLength(100);
+            entity.HasIndex(categoria => categoria.Nombre).IsUnique();
         });
     }
 }

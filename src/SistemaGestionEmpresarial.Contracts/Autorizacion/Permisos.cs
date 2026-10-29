@@ -14,6 +14,7 @@ public static class Permisos
     public const string GestionarUsuarios = "GestionarUsuarios";
     public const string GestionarRoles = "GestionarRoles";
     public const string GestionarClientes = "GestionarClientes";
+    public const string GestionarCategorias = "GestionarCategorias";
 
     public static IReadOnlyList<string> Todos { get; } = new[]
     {
@@ -23,7 +24,8 @@ public static class Permisos
         Eliminar,
         GestionarUsuarios,
         GestionarRoles,
-        GestionarClientes
+        GestionarClientes,
+        GestionarCategorias
     };
 
     public static string Describir(string permiso) => permiso switch
@@ -35,6 +37,7 @@ public static class Permisos
         GestionarUsuarios => "gestionar usuarios",
         GestionarRoles => "gestionar roles",
         GestionarClientes => "gestionar clientes",
+        GestionarCategorias => "gestionar categorías de productos",
         _ => "realizar esta acción"
     };
 }

@@ -152,6 +152,7 @@ public class AuthService : IAuthService
         if (user.Rol.PuedeGestionarUsuarios) claims.Add(new Claim(Permisos.ClaimType, Permisos.GestionarUsuarios));
         if (user.Rol.PuedeGestionarRoles) claims.Add(new Claim(Permisos.ClaimType, Permisos.GestionarRoles));
         if (user.Rol.PuedeGestionarClientes) claims.Add(new Claim(Permisos.ClaimType, Permisos.GestionarClientes));
+        if (user.Rol.PuedeGestionarCategorias) claims.Add(new Claim(Permisos.ClaimType, Permisos.GestionarCategorias));
 
         var token = new JwtSecurityToken(
             issuer: jwtIssuer,

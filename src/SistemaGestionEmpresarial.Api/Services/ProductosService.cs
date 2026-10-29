@@ -15,72 +15,76 @@ public sealed class ProductosService : IProductosService
     }
 
     public async Task<IReadOnlyList<ProductoResponse>> ObtenerTodosAsync(
-        int? id,
-        string? buscar,
-        string? categoria,
+        string? codigoOId,
+        string? nombre,
+        int? categoriaId,
         CancellationToken cancellationToken = default)
     {
-        var query = _dbContext.Productos.AsNoTracking().AsQueryable();
+        var query = _dbContext.Productos
+            .AsNoTracking()
+            .Include(producto => producto.Categoria)
+            .AsQueryable();
 
-        if (id.HasValue)
+        if (!string.IsNullOrWhiteSpace(codigoOId))
         {
-            query = query.Where(producto => producto.Id == id.Value);
+            var termino = codigoOId.Trim();
+            if (int.TryParse(termino, out var id))
+                query = query.Where(producto => producto.Id == id || producto.Codigo.Contains(termino));
+            else
+                query = query.Where(producto => producto.Codigo.Contains(termino));
         }
 
-        if (!string.IsNullOrWhiteSpace(buscar))
+        if (!string.IsNullOrWhiteSpace(nombre))
         {
-            var termino = buscar.Trim();
-            query = query.Where(producto =>
-                producto.Nombre.Contains(termino) ||
-                producto.Codigo.Contains(termino));
+            var termino = nombre.Trim();
+            query = query.Where(producto => producto.Nombre.Contains(termino));
         }
 
-        if (!string.IsNullOrWhiteSpace(categoria))
-        {
-            var categoriaFiltro = categoria.Trim();
-            query = query.Where(producto => producto.Categoria == categoriaFiltro);
-        }
+        if (categoriaId.HasValue)
+            query = query.Where(producto => producto.CategoriaId == categoriaId.Value);
 
         return await query
-            .OrderBy(producto => producto.Nombre)
+            .OrderBy(producto => producto.Codigo)
             .Select(producto => Mapear(producto))
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<ProductoResponse?> ObtenerPorIdAsync(
-        int id,
+    public async Task<IReadOnlyList<CategoriaProductoResponse>> ObtenerCategoriasDisponiblesAsync(
         CancellationToken cancellationToken = default) =>
+        await _dbContext.CategoriasProducto
+            .AsNoTracking()
+            .OrderBy(categoria => categoria.Nombre)
+            .Select(categoria => new CategoriaProductoResponse
+            {
+                Id = categoria.Id,
+                Nombre = categoria.Nombre
+            })
+            .ToListAsync(cancellationToken);
+
+    public async Task<ProductoResponse?> ObtenerPorIdAsync(int id, CancellationToken cancellationToken = default) =>
         await _dbContext.Productos
             .AsNoTracking()
+            .Include(producto => producto.Categoria)
             .Where(producto => producto.Id == id)
             .Select(producto => Mapear(producto))
             .SingleOrDefaultAsync(cancellationToken);
-
-    public async Task<IReadOnlyList<string>> ObtenerCategoriasAsync(
-        CancellationToken cancellationToken = default) =>
-        await _dbContext.Productos
-            .AsNoTracking()
-            .Select(producto => producto.Categoria)
-            .Where(cat => !string.IsNullOrWhiteSpace(cat))
-            .Distinct()
-            .OrderBy(cat => cat)
-            .ToListAsync(cancellationToken);
 
     public async Task<ResultadoCrud<ProductoResponse>> CrearAsync(
         CrearProductoRequest request,
         CancellationToken cancellationToken = default)
     {
-        var datos = Normalizar(request.Codigo, request.Nombre, request.Precio, request.Stock, request.Categoria);
+        var datos = Normalizar(request.Codigo, request.Nombre, request.Precio, request.Stock, request.CategoriaId);
         var error = Validar(datos);
         if (error is not null)
-        {
             return ResultadoCrud<ProductoResponse>.Validacion(error);
-        }
 
-        if (await _dbContext.Productos.AnyAsync(p => p.Codigo == datos.Codigo, cancellationToken))
-        {
+        var categoria = await _dbContext.CategoriasProducto.SingleOrDefaultAsync(
+            entidad => entidad.Id == datos.CategoriaId, cancellationToken);
+        if (categoria is null)
+            return ResultadoCrud<ProductoResponse>.Validacion("La categoría seleccionada no existe.");
+
+        if (await _dbContext.Productos.AnyAsync(producto => producto.Codigo == datos.Codigo, cancellationToken))
             return ResultadoCrud<ProductoResponse>.Conflicto("Ya existe un producto con ese código.");
-        }
 
         var producto = new Producto
         {
@@ -88,11 +92,11 @@ public sealed class ProductosService : IProductosService
             Nombre = datos.Nombre,
             Precio = datos.Precio,
             Stock = datos.Stock,
-            Categoria = datos.Categoria
+            CategoriaId = datos.CategoriaId,
+            Categoria = categoria
         };
 
         _dbContext.Productos.Add(producto);
-
         try
         {
             await _dbContext.SaveChangesAsync(cancellationToken);
@@ -111,33 +115,32 @@ public sealed class ProductosService : IProductosService
         CancellationToken cancellationToken = default)
     {
         var producto = await _dbContext.Productos.SingleOrDefaultAsync(
-            p => p.Id == id,
+            entidad => entidad.Id == id,
             cancellationToken);
-
         if (producto is null)
-        {
             return ResultadoCrud<ProductoResponse>.NoEncontrado("El producto solicitado no existe.");
-        }
 
-        var datos = Normalizar(request.Codigo, request.Nombre, request.Precio, request.Stock, request.Categoria);
+        var datos = Normalizar(request.Codigo, request.Nombre, request.Precio, request.Stock, request.CategoriaId);
         var error = Validar(datos);
         if (error is not null)
-        {
             return ResultadoCrud<ProductoResponse>.Validacion(error);
-        }
+
+        var categoria = await _dbContext.CategoriasProducto.SingleOrDefaultAsync(
+            entidad => entidad.Id == datos.CategoriaId, cancellationToken);
+        if (categoria is null)
+            return ResultadoCrud<ProductoResponse>.Validacion("La categoría seleccionada no existe.");
 
         if (await _dbContext.Productos.AnyAsync(
-                p => p.Id != id && p.Codigo == datos.Codigo,
+                entidad => entidad.Id != id && entidad.Codigo == datos.Codigo,
                 cancellationToken))
-        {
             return ResultadoCrud<ProductoResponse>.Conflicto("Ya existe un producto con ese código.");
-        }
 
         producto.Codigo = datos.Codigo;
         producto.Nombre = datos.Nombre;
         producto.Precio = datos.Precio;
         producto.Stock = datos.Stock;
-        producto.Categoria = datos.Categoria;
+        producto.CategoriaId = datos.CategoriaId;
+        producto.Categoria = categoria;
 
         try
         {
@@ -151,22 +154,16 @@ public sealed class ProductosService : IProductosService
         return ResultadoCrud<ProductoResponse>.Exito(Mapear(producto), "Producto actualizado correctamente.");
     }
 
-    public async Task<ResultadoCrud<bool>> EliminarAsync(
-        int id,
-        CancellationToken cancellationToken = default)
+    public async Task<ResultadoCrud<bool>> EliminarAsync(int id, CancellationToken cancellationToken = default)
     {
         var producto = await _dbContext.Productos.SingleOrDefaultAsync(
-            p => p.Id == id,
+            entidad => entidad.Id == id,
             cancellationToken);
-
         if (producto is null)
-        {
             return ResultadoCrud<bool>.NoEncontrado("El producto solicitado no existe.");
-        }
 
         _dbContext.Productos.Remove(producto);
         await _dbContext.SaveChangesAsync(cancellationToken);
-
         return ResultadoCrud<bool>.Exito(true, "Producto eliminado correctamente.");
     }
 
@@ -175,26 +172,16 @@ public sealed class ProductosService : IProductosService
         string nombre,
         decimal precio,
         int stock,
-        string categoria) =>
-        new(codigo.Trim().ToUpperInvariant(), nombre.Trim(), precio, stock, categoria.Trim());
+        int categoriaId) =>
+        new(codigo.Trim().ToUpperInvariant(), nombre.Trim(), precio, stock, categoriaId);
 
     private static string? Validar(DatosProducto datos)
     {
-        if (string.IsNullOrWhiteSpace(datos.Codigo))
-            return "El código es obligatorio.";
-
-        if (string.IsNullOrWhiteSpace(datos.Nombre))
-            return "El nombre es obligatorio.";
-
-        if (datos.Precio <= 0)
-            return "El precio debe ser mayor que 0.";
-
-        if (datos.Stock < 0)
-            return "El stock debe ser mayor o igual a 0.";
-
-        if (string.IsNullOrWhiteSpace(datos.Categoria))
-            return "La categoría es obligatoria.";
-
+        if (string.IsNullOrWhiteSpace(datos.Codigo)) return "El código es obligatorio.";
+        if (string.IsNullOrWhiteSpace(datos.Nombre)) return "El nombre es obligatorio.";
+        if (datos.Precio <= 0) return "El precio debe ser mayor que 0.";
+        if (datos.Stock < 0) return "El stock debe ser mayor o igual a 0.";
+        if (datos.CategoriaId <= 0) return "Debe seleccionar una categoría.";
         return null;
     }
 
@@ -205,7 +192,8 @@ public sealed class ProductosService : IProductosService
         Nombre = producto.Nombre,
         Precio = producto.Precio,
         Stock = producto.Stock,
-        Categoria = producto.Categoria
+        CategoriaId = producto.CategoriaId,
+        Categoria = producto.Categoria.Nombre
     };
 
     private sealed record DatosProducto(
@@ -213,5 +201,5 @@ public sealed class ProductosService : IProductosService
         string Nombre,
         decimal Precio,
         int Stock,
-        string Categoria);
+        int CategoriaId);
 }

@@ -2,6 +2,7 @@
 @attribute [Authorize(Policy = PoliticasDePermiso.GestionarClientes)]
 @inject ClientesApiService ClientesApi
 @inject IJSRuntime JS
+@using System.ComponentModel.DataAnnotations
 
 <PageTitle>Gestión de Clientes - SGECAR</PageTitle>
 
@@ -53,8 +54,16 @@
                     <label>Apellido
                         <InputText @bind-Value="formulario.Apellido" />
                     </label>
+                    <label>Prefijo
+                        <InputSelect @bind-Value="formulario.Prefijo">
+                            <option value="809">809</option>
+                            <option value="829">829</option>
+                            <option value="849">849</option>
+                        </InputSelect>
+                    </label>
                     <label>Teléfono
-                        <InputText @bind-Value="formulario.Telefono" />
+                        <input @bind="formulario.TelefonoLocal" @bind:event="oninput"
+                               inputmode="numeric" maxlength="8" placeholder="555-1234" />
                     </label>
                     <label>Correo
                         <InputText @bind-Value="formulario.Correo" type="email" />
@@ -162,7 +171,8 @@
         {
             Nombre = cliente.Nombre,
             Apellido = cliente.Apellido,
-            Telefono = cliente.Telefono,
+            Prefijo = cliente.Telefono.Length >= 3 ? cliente.Telefono[..3] : "809",
+            TelefonoLocal = cliente.Telefono.Length > 4 ? cliente.Telefono[4..] : string.Empty,
             Correo = cliente.Correo,
             Direccion = cliente.Direccion
         };
@@ -194,7 +204,7 @@
             {
                 Nombre = formulario.Nombre,
                 Apellido = formulario.Apellido,
-                Telefono = formulario.Telefono,
+                Telefono = $"{formulario.Prefijo}-{formulario.TelefonoLocal}",
                 Correo = formulario.Correo,
                 Direccion = formulario.Direccion
             });
@@ -205,7 +215,7 @@
             {
                 Nombre = formulario.Nombre,
                 Apellido = formulario.Apellido,
-                Telefono = formulario.Telefono,
+                Telefono = $"{formulario.Prefijo}-{formulario.TelefonoLocal}",
                 Correo = formulario.Correo,
                 Direccion = formulario.Direccion
             });
@@ -242,7 +252,7 @@
         esError = error;
     }
 
-    private sealed class ClienteForm
+    private sealed class ClienteForm : IValidatableObject
     {
         [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "El nombre es obligatorio.")]
         [System.ComponentModel.DataAnnotations.MaxLength(100, ErrorMessage = "El nombre no puede superar 100 caracteres.")]
@@ -252,9 +262,38 @@
         [System.ComponentModel.DataAnnotations.MaxLength(100, ErrorMessage = "El apellido no puede superar 100 caracteres.")]
         public string Apellido { get; set; } = string.Empty;
 
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "El teléfono es obligatorio.")]
-        [System.ComponentModel.DataAnnotations.MaxLength(30, ErrorMessage = "El teléfono no puede superar 30 caracteres.")]
-        public string Telefono { get; set; } = string.Empty;
+        public string Prefijo { get; set; } = "809";
+
+        private string telefonoLocal = string.Empty;
+        private bool telefonoInvalido;
+
+        public string TelefonoLocal
+        {
+            get => telefonoLocal;
+            set
+            {
+                var entrada = value ?? string.Empty;
+                var digitos = new string(entrada.Where(c => c is >= '0' and <= '9').ToArray());
+                telefonoInvalido = digitos.Length > 7 ||
+                    entrada.Where((c, i) => c is not (>= '0' and <= '9') && !(c == '-' && i == 3)).Any();
+                if (digitos.Length > 7)
+                    digitos = digitos[..7];
+
+                telefonoLocal = digitos.Length > 3
+                    ? $"{digitos[..3]}-{digitos[3..]}"
+                    : digitos;
+            }
+        }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (Prefijo is not ("809" or "829" or "849"))
+                yield return new ValidationResult("Seleccione un prefijo válido.", [nameof(Prefijo)]);
+
+            if (telefonoInvalido || telefonoLocal.Length != 8)
+                yield return new ValidationResult(
+                    "El teléfono debe contener exactamente siete dígitos.", [nameof(TelefonoLocal)]);
+        }
 
         [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "El correo es obligatorio.")]
         [System.ComponentModel.DataAnnotations.EmailAddress(ErrorMessage = "El correo no tiene un formato válido.")]

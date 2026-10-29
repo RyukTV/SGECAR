@@ -1,0 +1,256 @@
+@page "/reportes/productos"
+@attribute [Authorize(Policy = PoliticasDePermiso.Consultar)]
+@inject ProductosApiService ProductosApi
+@inject ReporteProductosApiService ReportePdfApi
+@inject IJSRuntime JS
+
+<PageTitle>Reporte de Productos - SGECAR</PageTitle>
+
+<div class="gestion-wrapper reporte-wrapper">
+    <header class="gestion-header">
+        <div>
+            <a href="/administracion/productos" class="gestion-volver">← Mantenimiento de Productos</a>
+            <h1>Reporte de Productos</h1>
+            <p>Seleccione filtros opcionales antes de generar el reporte.</p>
+        </div>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(mensajeError))
+    {
+        <div class="gestion-alert gestion-alert-error" role="alert">@mensajeError</div>
+    }
+
+    <form class="gestion-panel reporte-filtros" @onsubmit="GenerarReporteAsync" @onsubmit:preventDefault>
+        <h2>Filtros previos al reporte</h2>
+        <div class="gestion-grid">
+            <label>ID o Código
+                <input @bind="codigoOId" placeholder="Ej. 2 o PRD-002" />
+            </label>
+            <label>Nombre
+                <input @bind="nombre" placeholder="Ej. Monitor" />
+            </label>
+            <label>Categoría
+                <select @bind="categoriaId">
+                    <option value="0">Todas las categorías</option>
+                    @foreach (var categoria in categorias)
+                    {
+                        <option value="@categoria.Id">@categoria.Nombre</option>
+                    }
+                </select>
+            </label>
+        </div>
+        <div class="gestion-actions">
+            <button class="gestion-btn gestion-btn-primary" type="submit" disabled="@cargando">Generar reporte</button>
+            <button class="gestion-btn gestion-btn-light" type="button" @onclick="LimpiarFiltros" disabled="@cargando">Limpiar filtros</button>
+        </div>
+    </form>
+
+    @if (reporteGenerado)
+    {
+        <div class="gestion-actions">
+            <button class="gestion-btn gestion-btn-primary" type="button" @onclick="DescargarPdfAsync" disabled="@descargandoPdf">
+                @(descargandoPdf ? "Generando PDF…" : "Descargar PDF")
+            </button>
+        </div>
+        <section class="reporte-documento">
+            <div class="reporte-encabezado">
+                <div>
+                    <span class="reporte-etiqueta">SGECAR · INVENTARIO</span>
+                    <h2>Reporte de Productos</h2>
+                    <span>Entidad: Productos</span>
+                </div>
+                <div class="reporte-fecha">
+                    <strong>Fecha de generación</strong>
+                    <span>@fechaGeneracion?.ToString("dd/MM/yyyy HH:mm")</span>
+                </div>
+            </div>
+
+            <div class="reporte-resumen">
+                <div><strong>Criterios:</strong> @DescripcionFiltros</div>
+                <div><strong>Registros encontrados:</strong> @productos.Count</div>
+            </div>
+
+            @if (cargando)
+            {
+                <p class="gestion-estado" role="status">Generando reporte…</p>
+            }
+            else if (productos.Count == 0)
+            {
+                <p class="gestion-estado">No se encontraron productos para los filtros seleccionados.</p>
+            }
+            else
+            {
+                <div class="gestion-tabla-scroll">
+                    <table class="gestion-tabla reporte-tabla">
+                        <thead>
+                            <tr><th>ID</th><th>Código</th><th>Nombre</th><th>Precio</th><th>Stock</th><th>Categoría</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var producto in productos)
+                            {
+                                <tr>
+                                    <td>@producto.Id</td>
+                                    <td><strong>@producto.Codigo</strong></td>
+                                    <td>@producto.Nombre</td>
+                                    <td>RD$ @producto.Precio.ToString("N2")</td>
+                                    <td>@producto.Stock</td>
+                                    <td>@producto.Categoria</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    }
+    else
+    {
+        <p class="gestion-estado">Pulse <strong>Generar reporte</strong> para consultar los productos.</p>
+    }
+</div>
+
+<style>
+    .reporte-wrapper { max-width: 1100px; }
+    .reporte-documento {
+        margin-top: 22px;
+        padding: 26px;
+        background: #fff;
+        border: 1px solid var(--color-border);
+        border-radius: 12px;
+        box-shadow: var(--shadow-sm);
+    }
+    .reporte-encabezado {
+        display: flex;
+        justify-content: space-between;
+        gap: 24px;
+        padding-bottom: 18px;
+        border-bottom: 2px solid #1e293b;
+    }
+    .reporte-encabezado h2 { margin: 4px 0; color: #0f172a; font-size: 1.55rem; }
+    .reporte-encabezado span { color: #475569; font-size: .82rem; }
+    .reporte-etiqueta { color: #2563eb; font-size: .72rem; font-weight: 800; letter-spacing: .08em; }
+    .reporte-fecha { display: flex; flex-direction: column; text-align: right; color: #475569; font-size: .82rem; }
+    .reporte-resumen {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        margin: 18px 0;
+        padding: 12px 14px;
+        border-radius: 8px;
+        background: #f8fafc;
+        color: #475569;
+        font-size: .84rem;
+    }
+    .reporte-tabla { font-size: .82rem; }
+</style>
+
+@code {
+    private List<ProductoResponse> productos = [];
+    private List<CategoriaProductoResponse> categorias = [];
+    private string codigoOId = string.Empty;
+    private string nombre = string.Empty;
+    private int categoriaId;
+    private string? filtrosGenerados;
+    private string? mensajeError;
+    private DateTime? fechaGeneracion;
+    private bool cargando;
+    private bool descargandoPdf;
+    private bool reporteGenerado;
+
+    private string DescripcionFiltros => filtrosGenerados ?? "Todos los registros";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var resultado = await ProductosApi.ObtenerCategoriasDisponiblesAsync();
+        if (resultado.Exito)
+            categorias = resultado.Valor!.ToList();
+        else
+            mensajeError = resultado.Mensaje;
+    }
+
+    private async Task GenerarReporteAsync()
+    {
+        cargando = true;
+        reporteGenerado = false;
+        mensajeError = null;
+
+        var resultado = await ProductosApi.ObtenerAsync(
+            codigoOId, nombre, categoriaId > 0 ? categoriaId : null);
+        if (resultado.Exito)
+        {
+            productos = resultado.Valor!.ToList();
+            fechaGeneracion = DateTime.Now;
+            filtrosGenerados = CrearDescripcionFiltros();
+            reporteGenerado = true;
+        }
+        else
+        {
+            productos = [];
+            mensajeError = resultado.Mensaje;
+        }
+
+        cargando = false;
+    }
+
+    private void LimpiarFiltros()
+    {
+        codigoOId = string.Empty;
+        nombre = string.Empty;
+        categoriaId = 0;
+        productos = [];
+        reporteGenerado = false;
+        filtrosGenerados = null;
+        fechaGeneracion = null;
+        mensajeError = null;
+    }
+
+    private async Task DescargarPdfAsync()
+    {
+        if (!reporteGenerado || fechaGeneracion is null || descargandoPdf)
+            return;
+
+        descargandoPdf = true;
+        mensajeError = null;
+        try
+        {
+            var solicitud = new ReporteProductosPdfRequest
+            {
+                FechaGeneracion = fechaGeneracion.Value,
+                Criterios = DescripcionFiltros,
+                Productos = productos.ToList()
+            };
+            var resultado = await ReportePdfApi.DescargarPdfAsync(solicitud);
+            if (!resultado.Exito)
+            {
+                mensajeError = resultado.Mensaje;
+                return;
+            }
+
+            using var stream = new MemoryStream(resultado.Valor!);
+            using var referencia = new DotNetStreamReference(stream);
+            await JS.InvokeVoidAsync("descargarReporteProductosPdf",
+                $"ReporteProductos_{fechaGeneracion.Value:yyyy-MM-dd}.pdf", referencia);
+        }
+        catch (JSException)
+        {
+            mensajeError = "No fue posible descargar el PDF.";
+        }
+        finally
+        {
+            descargandoPdf = false;
+        }
+    }
+
+    private string CrearDescripcionFiltros()
+    {
+        var filtros = new List<string>();
+        if (!string.IsNullOrWhiteSpace(codigoOId)) filtros.Add($"ID o Código: {codigoOId.Trim()}");
+        if (!string.IsNullOrWhiteSpace(nombre)) filtros.Add($"Nombre: {nombre.Trim()}");
+        if (categoriaId > 0)
+        {
+            var categoria = categorias.FirstOrDefault(item => item.Id == categoriaId)?.Nombre ?? categoriaId.ToString();
+            filtros.Add($"Categoría: {categoria}");
+        }
+        return filtros.Count == 0 ? "Todos los registros" : string.Join(" · ", filtros);
+    }
+}
