@@ -1,0 +1,192 @@
+@page "/administracion/categorias-productos"
+@attribute [Authorize(Policy = PoliticasDePermiso.GestionarCategorias)]
+@inject CategoriasProductoApiService CategoriasApi
+@inject IJSRuntime JS
+
+<PageTitle>Categorías de Productos - SGECAR</PageTitle>
+
+<div class="gestion-wrapper">
+    <header class="gestion-header">
+        <div>
+            <a href="/administracion" class="gestion-volver">← Administración</a>
+            <h1>Categorías de Productos</h1>
+            <p>Administre las categorías utilizadas por el inventario.</p>
+        </div>
+        <button class="gestion-btn gestion-btn-primary" @onclick="PrepararCreacion">Nueva categoría</button>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(mensaje))
+    {
+        <div class="gestion-alert @(esError ? "gestion-alert-error" : "gestion-alert-ok")" role="alert">@mensaje</div>
+    }
+
+    <form class="gestion-search" @onsubmit="BuscarAsync" @onsubmit:preventDefault>
+        <input @bind="buscar" placeholder="Buscar por nombre" aria-label="Buscar categorías" />
+        <button class="gestion-btn" type="submit" disabled="@cargando">Buscar</button>
+        <button class="gestion-btn gestion-btn-light" type="button" @onclick="LimpiarBusquedaAsync" disabled="@cargando">Limpiar</button>
+    </form>
+
+    @if (mostrarFormulario)
+    {
+        <section class="gestion-panel" id="formulario-categoria">
+            <h2>@(idEdicion.HasValue ? "Modificar categoría" : "Registrar categoría")</h2>
+            <EditForm Model="formulario" OnValidSubmit="GuardarAsync">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <label>Nombre
+                    <InputText @bind-Value="formulario.Nombre" />
+                </label>
+                <div class="gestion-actions">
+                    <button class="gestion-btn gestion-btn-primary" type="submit" disabled="@guardando">Guardar</button>
+                    <button class="gestion-btn gestion-btn-light" type="button" @onclick="LimpiarCampos">Limpiar campos</button>
+                    <button class="gestion-btn gestion-btn-light" type="button" @onclick="CancelarFormulario">Cancelar</button>
+                </div>
+            </EditForm>
+        </section>
+    }
+
+    @if (cargando)
+    {
+        <p class="gestion-estado" role="status">Cargando categorías…</p>
+    }
+    else if (categorias.Count == 0)
+    {
+        <p class="gestion-estado">No se encontraron categorías.</p>
+    }
+    else
+    {
+        <div class="gestion-tabla-scroll">
+            <table class="gestion-tabla">
+                <thead><tr><th>ID</th><th>Nombre</th><th>Acciones</th></tr></thead>
+                <tbody>
+                    @foreach (var categoria in categorias)
+                    {
+                        <tr>
+                            <td>@categoria.Id</td>
+                            <td><strong>@categoria.Nombre</strong></td>
+                            <td class="gestion-actions-tabla">
+                                <button class="gestion-btn gestion-btn-small" @onclick="() => PrepararEdicion(categoria)">Modificar</button>
+                                <button class="gestion-btn gestion-btn-danger gestion-btn-small" @onclick="() => EliminarAsync(categoria)">Eliminar</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<CategoriaProductoResponse> categorias = [];
+    private CategoriaForm formulario = new();
+    private int? idEdicion;
+    private string buscar = string.Empty;
+    private string? mensaje;
+    private bool esError;
+    private bool cargando = true;
+    private bool guardando;
+    private bool mostrarFormulario;
+
+    protected override Task OnInitializedAsync() => CargarAsync();
+
+    private async Task CargarAsync()
+    {
+        cargando = true;
+        var resultado = await CategoriasApi.ObtenerAsync(buscar);
+        if (resultado.Exito)
+            categorias = resultado.Valor!.ToList();
+        else
+            MostrarMensaje(resultado.Mensaje, true);
+        cargando = false;
+    }
+
+    private Task BuscarAsync() => CargarAsync();
+
+    private async Task LimpiarBusquedaAsync()
+    {
+        buscar = string.Empty;
+        await CargarAsync();
+    }
+
+    private void PrepararCreacion()
+    {
+        idEdicion = null;
+        formulario = new CategoriaForm();
+        mostrarFormulario = true;
+        mensaje = null;
+    }
+
+    private void PrepararEdicion(CategoriaProductoResponse categoria)
+    {
+        idEdicion = categoria.Id;
+        formulario = new CategoriaForm { Nombre = categoria.Nombre };
+        mostrarFormulario = true;
+        mensaje = null;
+    }
+
+    private void LimpiarCampos()
+    {
+        formulario = new CategoriaForm();
+        mensaje = null;
+    }
+
+    private void CancelarFormulario()
+    {
+        mostrarFormulario = false;
+        formulario = new CategoriaForm();
+        idEdicion = null;
+    }
+
+    private async Task GuardarAsync()
+    {
+        guardando = true;
+        ResultadoApi<CategoriaProductoResponse> resultado;
+        if (idEdicion.HasValue)
+        {
+            resultado = await CategoriasApi.ActualizarAsync(idEdicion.Value,
+                new ActualizarCategoriaProductoRequest { Nombre = formulario.Nombre });
+        }
+        else
+        {
+            resultado = await CategoriasApi.CrearAsync(
+                new CrearCategoriaProductoRequest { Nombre = formulario.Nombre });
+        }
+
+        guardando = false;
+        if (!resultado.Exito)
+        {
+            MostrarMensaje(resultado.Mensaje, true);
+            return;
+        }
+
+        MostrarMensaje(idEdicion.HasValue
+            ? "Categoría actualizada correctamente."
+            : "Categoría creada correctamente.", false);
+        CancelarFormulario();
+        await CargarAsync();
+    }
+
+    private async Task EliminarAsync(CategoriaProductoResponse categoria)
+    {
+        if (!await JS.InvokeAsync<bool>("confirm", $"¿Eliminar la categoría '{categoria.Nombre}'?"))
+            return;
+
+        var resultado = await CategoriasApi.EliminarAsync(categoria.Id);
+        MostrarMensaje(resultado.Mensaje, !resultado.Exito);
+        if (resultado.Exito)
+            await CargarAsync();
+    }
+
+    private void MostrarMensaje(string texto, bool error)
+    {
+        mensaje = texto;
+        esError = error;
+    }
+
+    private sealed class CategoriaForm
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "El nombre de la categoría es obligatorio.")]
+        [System.ComponentModel.DataAnnotations.MaxLength(100, ErrorMessage = "El nombre no puede superar 100 caracteres.")]
+        public string Nombre { get; set; } = string.Empty;
+    }
+}

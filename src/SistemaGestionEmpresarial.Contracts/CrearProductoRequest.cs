@@ -18,7 +18,6 @@ public sealed class CrearProductoRequest
     [Range(0, int.MaxValue, ErrorMessage = "El stock debe ser mayor o igual a 0.")]
     public int Stock { get; set; }
 
-    [Required(ErrorMessage = "La categoría es obligatoria.")]
-    [MaxLength(100, ErrorMessage = "La categoría no puede superar 100 caracteres.")]
-    public string Categoria { get; set; } = string.Empty;
+    [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar una categoría.")]
+    public int CategoriaId { get; set; }
 }

@@ -22,6 +22,27 @@ namespace SistemaGestionEmpresarial.Api.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("SistemaGestionEmpresarial.Api.Entities.CategoriaProducto", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Nombre")
+                        .IsUnique();
+
+                    b.ToTable("CategoriasProducto", (string)null);
+                });
+
             modelBuilder.Entity("SistemaGestionEmpresarial.Api.Entities.Cliente", b =>
                 {
                     b.Property<int>("Id")
@@ -71,10 +92,8 @@ namespace SistemaGestionEmpresarial.Api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Categoria")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                    b.Property<int>("CategoriaId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Codigo")
                         .IsRequired()
@@ -94,6 +113,8 @@ namespace SistemaGestionEmpresarial.Api.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CategoriaId");
 
                     b.HasIndex("Codigo")
                         .IsUnique();
@@ -121,6 +142,9 @@ namespace SistemaGestionEmpresarial.Api.Migrations
                         .HasColumnType("bit");
 
                     b.Property<bool>("PuedeEliminar")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("PuedeGestionarCategorias")
                         .HasColumnType("bit");
 
                     b.Property<bool>("PuedeGestionarClientes")
@@ -190,6 +214,17 @@ namespace SistemaGestionEmpresarial.Api.Migrations
                     b.ToTable("Usuarios", (string)null);
                 });
 
+            modelBuilder.Entity("SistemaGestionEmpresarial.Api.Entities.Producto", b =>
+                {
+                    b.HasOne("SistemaGestionEmpresarial.Api.Entities.CategoriaProducto", "Categoria")
+                        .WithMany("Productos")
+                        .HasForeignKey("CategoriaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Categoria");
+                });
+
             modelBuilder.Entity("SistemaGestionEmpresarial.Api.Entities.Usuario", b =>
                 {
                     b.HasOne("SistemaGestionEmpresarial.Api.Entities.Rol", "Rol")
@@ -199,6 +234,11 @@ namespace SistemaGestionEmpresarial.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Rol");
+                });
+
+            modelBuilder.Entity("SistemaGestionEmpresarial.Api.Entities.CategoriaProducto", b =>
+                {
+                    b.Navigation("Productos");
                 });
 #pragma warning restore 612, 618
         }

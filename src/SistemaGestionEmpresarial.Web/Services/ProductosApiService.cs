@@ -14,17 +14,18 @@ public sealed class ProductosApiService
     }
 
     public async Task<ResultadoApi<IReadOnlyList<ProductoResponse>>> ObtenerAsync(
-        int? id,
-        string? buscar,
-        string? categoria,
+        string? codigoOId,
+        string? nombre,
+        int? categoriaId,
         CancellationToken cancellationToken = default)
     {
         var parametros = new List<string>();
-        if (id.HasValue) parametros.Add($"id={id.Value}");
-        if (!string.IsNullOrWhiteSpace(buscar))
-            parametros.Add($"buscar={Uri.EscapeDataString(buscar.Trim())}");
-        if (!string.IsNullOrWhiteSpace(categoria))
-            parametros.Add($"categoria={Uri.EscapeDataString(categoria.Trim())}");
+        if (!string.IsNullOrWhiteSpace(codigoOId))
+            parametros.Add($"codigoOId={Uri.EscapeDataString(codigoOId.Trim())}");
+        if (!string.IsNullOrWhiteSpace(nombre))
+            parametros.Add($"nombre={Uri.EscapeDataString(nombre.Trim())}");
+        if (categoriaId.HasValue)
+            parametros.Add($"categoriaId={categoriaId.Value}");
 
         var ruta = parametros.Count == 0 ? "api/productos" : $"api/productos?{string.Join("&", parametros)}";
 
@@ -56,34 +57,35 @@ public sealed class ProductosApiService
         }
     }
 
-    public async Task<ResultadoApi<IReadOnlyList<string>>> ObtenerCategoriasAsync(
+    public async Task<ResultadoApi<IReadOnlyList<CategoriaProductoResponse>>> ObtenerCategoriasDisponiblesAsync(
         CancellationToken cancellationToken = default)
     {
         try
         {
-            using var response = await _httpClient.GetAsync("api/productos/categorias", cancellationToken);
+            using var response = await _httpClient.GetAsync(
+                "api/productos/categorias-disponibles", cancellationToken);
             if (!response.IsSuccessStatusCode)
-                return ResultadoApi<IReadOnlyList<string>>.Fallo(
+                return ResultadoApi<IReadOnlyList<CategoriaProductoResponse>>.Fallo(
                     await RespuestaApiReader.LeerErrorAsync(
                         response, cancellationToken, "No fue posible obtener las categorías."),
                     (int)response.StatusCode);
 
-            var categorias = await response.Content.ReadFromJsonAsync<List<string>>(
+            var categorias = await response.Content.ReadFromJsonAsync<List<CategoriaProductoResponse>>(
                 RespuestaApiReader.JsonOptions, cancellationToken) ?? [];
-            return ResultadoApi<IReadOnlyList<string>>.Correcto(
+            return ResultadoApi<IReadOnlyList<CategoriaProductoResponse>>.Correcto(
                 categorias, codigoHttp: (int)response.StatusCode);
         }
         catch (HttpRequestException)
         {
-            return ResultadoApi<IReadOnlyList<string>>.Fallo("No fue posible comunicarse con la API.");
+            return ResultadoApi<IReadOnlyList<CategoriaProductoResponse>>.Fallo("No fue posible comunicarse con la API.");
         }
         catch (TaskCanceledException)
         {
-            return ResultadoApi<IReadOnlyList<string>>.Fallo("La solicitud tardó demasiado tiempo.");
+            return ResultadoApi<IReadOnlyList<CategoriaProductoResponse>>.Fallo("La solicitud tardó demasiado tiempo.");
         }
         catch (JsonException)
         {
-            return ResultadoApi<IReadOnlyList<string>>.Fallo("La API devolvió una respuesta inesperada.");
+            return ResultadoApi<IReadOnlyList<CategoriaProductoResponse>>.Fallo("La API devolvió una respuesta inesperada.");
         }
     }
 

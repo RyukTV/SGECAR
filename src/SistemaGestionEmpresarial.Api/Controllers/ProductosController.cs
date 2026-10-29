@@ -19,34 +19,23 @@ public sealed class ProductosController : ControllerBase
         _productosService = productosService;
     }
 
-    /// <summary>
-    /// Consulta el listado de productos con filtros opcionales.
-    /// Permitido a: Administrador, Supervisor y Ejecutor (Permiso: Consultar).
-    /// </summary>
     [HttpGet]
     [Permiso(Permisos.Consultar)]
     [ProducesResponseType(typeof(IReadOnlyList<ProductoResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<ProductoResponse>>> ObtenerTodos(
-        [FromQuery] int? id,
-        [FromQuery] string? buscar,
-        [FromQuery] string? categoria,
+        [FromQuery] string? codigoOId,
+        [FromQuery] string? nombre,
+        [FromQuery] int? categoriaId,
         CancellationToken cancellationToken) =>
-        Ok(await _productosService.ObtenerTodosAsync(id, buscar, categoria, cancellationToken));
+        Ok(await _productosService.ObtenerTodosAsync(codigoOId, nombre, categoriaId, cancellationToken));
 
-    /// <summary>
-    /// Obtiene las categorías únicas registradas.
-    /// Permitido a: Administrador, Supervisor y Ejecutor (Permiso: Consultar).
-    /// </summary>
-    [HttpGet("categorias")]
+    [HttpGet("categorias-disponibles")]
     [Permiso(Permisos.Consultar)]
-    [ProducesResponseType(typeof(IReadOnlyList<string>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<string>>> ObtenerCategorias(CancellationToken cancellationToken) =>
-        Ok(await _productosService.ObtenerCategoriasAsync(cancellationToken));
+    [ProducesResponseType(typeof(IReadOnlyList<CategoriaProductoResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<CategoriaProductoResponse>>> ObtenerCategoriasDisponibles(
+        CancellationToken cancellationToken) =>
+        Ok(await _productosService.ObtenerCategoriasDisponiblesAsync(cancellationToken));
 
-    /// <summary>
-    /// Consulta un producto por su identificador.
-    /// Permitido a: Administrador, Supervisor y Ejecutor (Permiso: Consultar).
-    /// </summary>
     [HttpGet("{id:int}")]
     [Permiso(Permisos.Consultar)]
     [ProducesResponseType(typeof(ProductoResponse), StatusCodes.Status200OK)]
@@ -59,10 +48,6 @@ public sealed class ProductosController : ControllerBase
             : Ok(producto);
     }
 
-    /// <summary>
-    /// Registra un nuevo producto.
-    /// Permitido a: Administrador y Ejecutor (Permiso: Agregar).
-    /// </summary>
     [HttpPost]
     [Permiso(Permisos.Agregar)]
     [ProducesResponseType(typeof(ProductoResponse), StatusCodes.Status201Created)]
@@ -79,10 +64,6 @@ public sealed class ProductosController : ControllerBase
         return CreatedAtAction(nameof(ObtenerPorId), new { id = resultado.Valor!.Id }, resultado.Valor);
     }
 
-    /// <summary>
-    /// Modifica los datos de un producto existente.
-    /// Permitido a: Administrador y Supervisor (Permiso: Modificar).
-    /// </summary>
     [HttpPut("{id:int}")]
     [Permiso(Permisos.Modificar)]
     [ProducesResponseType(typeof(ProductoResponse), StatusCodes.Status200OK)]
@@ -98,10 +79,6 @@ public sealed class ProductosController : ControllerBase
         return resultado.EsExitoso ? Ok(resultado.Valor) : ConvertirError(resultado);
     }
 
-    /// <summary>
-    /// Elimina un producto.
-    /// Permitido únicamente a: Administrador (Permiso: Eliminar).
-    /// </summary>
     [HttpDelete("{id:int}")]
     [Permiso(Permisos.Eliminar)]
     [ProducesResponseType(typeof(MensajeResponse), StatusCodes.Status200OK)]

@@ -44,6 +44,7 @@
                     <label><InputCheckbox @bind-Value="formulario.PuedeGestionarUsuarios" /> Gestionar usuarios</label>
                     <label><InputCheckbox @bind-Value="formulario.PuedeGestionarRoles" /> Gestionar roles</label>
                     <label><InputCheckbox @bind-Value="formulario.PuedeGestionarClientes" /> Gestionar clientes</label>
+                    <label><InputCheckbox @bind-Value="formulario.PuedeGestionarCategorias" /> Gestionar categorías</label>
                 </div>
                 <div class="gestion-actions">
                     <button class="gestion-btn gestion-btn-primary" type="submit" disabled="@guardando">Guardar</button>
@@ -66,7 +67,7 @@
     {
         <div class="gestion-tabla-scroll">
             <table class="gestion-tabla gestion-tabla-roles">
-                <thead><tr><th>Rol</th><th>Consultar</th><th>Agregar</th><th>Modificar</th><th>Eliminar</th><th>Usuarios</th><th>Roles</th><th>Clientes</th><th>Acciones</th></tr></thead>
+                <thead><tr><th>Rol</th><th>Consultar</th><th>Agregar</th><th>Modificar</th><th>Eliminar</th><th>Usuarios</th><th>Roles</th><th>Clientes</th><th>Categorías</th><th>Acciones</th></tr></thead>
                 <tbody>
                     @foreach (var rol in roles)
                     {
@@ -79,6 +80,7 @@
                             <td>@Marca(rol.PuedeGestionarUsuarios)</td>
                             <td>@Marca(rol.PuedeGestionarRoles)</td>
                             <td>@Marca(rol.PuedeGestionarClientes)</td>
+                            <td>@Marca(rol.PuedeGestionarCategorias)</td>
                             <td class="gestion-actions-tabla">
                                 <button class="gestion-btn gestion-btn-small" @onclick="() => PrepararEdicion(rol)">Editar</button>
                                 <button class="gestion-btn gestion-btn-danger gestion-btn-small" @onclick="() => EliminarAsync(rol)">Eliminar</button>
@@ -143,7 +145,8 @@
             PuedeConsultar = rol.PuedeConsultar,
             PuedeGestionarUsuarios = rol.PuedeGestionarUsuarios,
             PuedeGestionarRoles = rol.PuedeGestionarRoles,
-            PuedeGestionarClientes = rol.PuedeGestionarClientes
+            PuedeGestionarClientes = rol.PuedeGestionarClientes,
+            PuedeGestionarCategorias = rol.PuedeGestionarCategorias
         };
         mostrarFormulario = true;
         mensaje = null;
@@ -166,7 +169,8 @@
                 PuedeConsultar = formulario.PuedeConsultar,
                 PuedeGestionarUsuarios = formulario.PuedeGestionarUsuarios,
                 PuedeGestionarRoles = formulario.PuedeGestionarRoles,
-                PuedeGestionarClientes = formulario.PuedeGestionarClientes
+                PuedeGestionarClientes = formulario.PuedeGestionarClientes,
+                PuedeGestionarCategorias = formulario.PuedeGestionarCategorias
             });
         }
         else
@@ -180,7 +184,8 @@
                 PuedeConsultar = formulario.PuedeConsultar,
                 PuedeGestionarUsuarios = formulario.PuedeGestionarUsuarios,
                 PuedeGestionarRoles = formulario.PuedeGestionarRoles,
-                PuedeGestionarClientes = formulario.PuedeGestionarClientes
+                PuedeGestionarClientes = formulario.PuedeGestionarClientes,
+                PuedeGestionarCategorias = formulario.PuedeGestionarCategorias
             });
         }
 
@@ -226,5 +231,6 @@
         public bool PuedeGestionarUsuarios { get; set; }
         public bool PuedeGestionarRoles { get; set; }
         public bool PuedeGestionarClientes { get; set; }
+        public bool PuedeGestionarCategorias { get; set; }
     }
 }

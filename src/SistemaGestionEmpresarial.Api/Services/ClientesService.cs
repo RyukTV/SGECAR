@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using SistemaGestionEmpresarial.Api.Data;
 using SistemaGestionEmpresarial.Api.Entities;
@@ -158,6 +159,8 @@ public sealed class ClientesService : IClientesService
         if (string.IsNullOrWhiteSpace(datos.Nombre)) return "El nombre es obligatorio.";
         if (string.IsNullOrWhiteSpace(datos.Apellido)) return "El apellido es obligatorio.";
         if (string.IsNullOrWhiteSpace(datos.Telefono)) return "El teléfono es obligatorio.";
+        if (!Regex.IsMatch(datos.Telefono, @"^(809|829|849)-[0-9]{3}-[0-9]{4}$"))
+            return "El teléfono debe tener un prefijo válido (809, 829 o 849) y siete dígitos.";
         if (string.IsNullOrWhiteSpace(datos.Correo)) return "El correo es obligatorio.";
         if (!new EmailAddressAttribute().IsValid(datos.Correo)) return "El correo no tiene un formato válido.";
         if (string.IsNullOrWhiteSpace(datos.Direccion)) return "La dirección es obligatoria.";

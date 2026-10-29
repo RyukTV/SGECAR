@@ -2,11 +2,13 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using QuestPDF.Infrastructure;
 using SistemaGestionEmpresarial.Api.Authorization;
 using SistemaGestionEmpresarial.Api.Data;
 using SistemaGestionEmpresarial.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+QuestPDF.Settings.License = LicenseType.Community;
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -22,6 +24,8 @@ builder.Services.AddScoped<IUsuariosService, UsuariosService>();
 builder.Services.AddScoped<IRolesService, RolesService>();
 builder.Services.AddScoped<IClientesService, ClientesService>();
 builder.Services.AddScoped<IProductosService, ProductosService>();
+builder.Services.AddScoped<ICategoriasProductoService, CategoriasProductoService>();
+builder.Services.AddScoped<ReporteProductosPdfService>();
 
 var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("Falta la clave de seguridad Jwt:Key en la configuración.");

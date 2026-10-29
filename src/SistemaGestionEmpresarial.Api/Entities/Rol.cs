@@ -11,4 +11,5 @@ public sealed class Rol
     public bool PuedeGestionarUsuarios { get; set; }
     public bool PuedeGestionarRoles { get; set; }
     public bool PuedeGestionarClientes { get; set; }
+    public bool PuedeGestionarCategorias { get; set; }
 }
