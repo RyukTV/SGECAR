@@ -1,0 +1,49 @@
+@implements IDisposable
+@inject ApiClient ApiClient
+
+<span class="connection-indicator @clase" role="status" aria-live="polite"><span class="connection-dot"></span>@texto</span>
+
+@code {
+    private readonly CancellationTokenSource cancelacion = new();
+    private string clase = "checking";
+    private string texto = "Comprobando conexión";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ComprobarAsync();
+        _ = VigilarAsync();
+    }
+
+    private async Task VigilarAsync()
+    {
+        try
+        {
+            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
+            while (await timer.WaitForNextTickAsync(cancelacion.Token))
+            {
+                await ComprobarAsync();
+            }
+        }
+        catch (OperationCanceledException) when (cancelacion.IsCancellationRequested) { }
+    }
+
+    private async Task ComprobarAsync()
+    {
+        try
+        {
+            using var espera = CancellationTokenSource.CreateLinkedTokenSource(cancelacion.Token);
+            espera.CancelAfter(TimeSpan.FromSeconds(5));
+            var respuesta = await ApiClient.CheckHealthAsync(espera.Token);
+            clase = string.Equals(respuesta.Status, "ok", StringComparison.OrdinalIgnoreCase) ? "connected" : "disconnected";
+        }
+        catch (Exception) when (!cancelacion.IsCancellationRequested)
+        {
+            clase = "disconnected";
+        }
+        if (cancelacion.IsCancellationRequested) return;
+        texto = clase == "connected" ? "Conectado" : "Sin conexión";
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose() { cancelacion.Cancel(); cancelacion.Dispose(); }
+}

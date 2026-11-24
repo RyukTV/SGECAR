@@ -1,508 +1,118 @@
 @page "/"
+@implements IDisposable
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ProductosApiService ProductosApi
+@inject ClientesApiService ClientesApi
+@inject UsuariosApiService UsuariosApi
+@inject CategoriasProductoApiService CategoriasApi
 
 <PageTitle>Inicio - SGECAR</PageTitle>
-
-<div class="dashboard-wrapper">
-    <AuthorizeView Context="sesion">
-        <Authorized>
-            <!-- Banner de Bienvenida Moderno -->
-            <div class="hero-welcome">
-                <div class="hero-info">
-                    <span class="greeting-badge">Sesión Activa</span>
-                    <h1>¡Hola, @sesion.User.Identity?.Name!</h1>
-                    <p class="hero-sub">
-                        Autenticado con éxito en el Sistema de Gestión Empresarial. Tu nivel de acceso actual es:
-                        <span class="role-pill">@(sesion.User.ObtenerRol() ?? "Usuario")</span>
-                    </p>
-                </div>
-            </div>
-
-            <!-- Matriz de Permisos por Rol (Caso Práctico 1) -->
-            <div class="section-title">
-                <h2>Control de Acceso y Permisos (Etapa I)</h2>
-                <p>Resumen de operaciones permitidas y restringidas para tu rol:</p>
-            </div>
-
-            <div class="cards-grid">
-                <!-- Tarjeta Consultar -->
-                <div class="perm-card @ClaseDeTarjeta(sesion, Permisos.Consultar)">
-                    <div class="card-icon icon-neutral">
-                        <svg class="card-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="11" cy="11" r="8" />
-                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                        </svg>
+<AuthorizeView Context="sesion">
+    <Authorized>
+        <div class="home-dashboard">
+            <header class="dash-hero"><div><span class="dash-eyebrow">PANEL GENERAL</span><h1>Hola, @sesion.User.Identity?.Name</h1><p>Resumen de tu espacio de trabajo <span class="dash-role">@sesion.User.ObtenerRol()</span></p></div></header>
+            @if (sesion.User.TienePermiso(Permisos.Consultar) || sesion.User.TienePermiso(Permisos.GestionarClientes) || sesion.User.TienePermiso(Permisos.GestionarUsuarios) || sesion.User.TienePermiso(Permisos.GestionarCategorias))
+            {
+                <section aria-labelledby="resumen"><div class="dash-section-title"><span class="dash-eyebrow">VISTA GENERAL</span><h2 id="resumen">Resumen</h2></div>
+                    <div class="dash-metrics">
+                        <VistaConPermiso Permiso="@Permisos.Consultar"><article class="dash-metric"><span class="dash-icon blue">▣</span><span>Productos</span><strong>@Valor(productos, cargandoProductos, errorProductos)</strong><small>Registrados en el catálogo</small></article></VistaConPermiso>
+                        <VistaConPermiso Permiso="@Permisos.GestionarClientes"><article class="dash-metric"><span class="dash-icon purple">♧</span><span>Clientes</span><strong>@Valor(clientes, cargandoClientes, errorClientes)</strong><small>Registrados en el sistema</small></article></VistaConPermiso>
+                        <VistaConPermiso Permiso="@Permisos.GestionarUsuarios"><article class="dash-metric"><span class="dash-icon green">♙</span><span>Usuarios activos</span><strong>@Valor(usuarios?.Count(u => u.Activo), cargandoUsuarios, errorUsuarios)</strong><small>Con acceso habilitado</small></article></VistaConPermiso>
+                        <VistaConPermiso Permiso="@Permisos.GestionarCategorias"><article class="dash-metric"><span class="dash-icon amber">▤</span><span>Categorías</span><strong>@Valor(categorias, cargandoCategorias, errorCategorias)</strong><small>Tipos de producto</small></article></VistaConPermiso>
                     </div>
-                    <div class="card-content">
-                        <h3>1. Consultar</h3>
-                        <p>Búsqueda y visualización de registros empresariales.</p>
-                        @RenderEstado(sesion, Permisos.Consultar)
-                    </div>
-                </div>
-
-                <!-- Tarjeta Agregar -->
-                <div class="perm-card @ClaseDeTarjeta(sesion, Permisos.Agregar)">
-                    <div class="card-icon icon-neutral">
-                        <svg class="card-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="12" y1="5" x2="12" y2="19" />
-                            <line x1="5" y1="12" x2="19" y2="12" />
-                        </svg>
-                    </div>
-                    <div class="card-content">
-                        <h3>2. Agregar</h3>
-                        <p>Creación de nuevos registros empresariales.</p>
-                        @RenderEstado(sesion, Permisos.Agregar)
-                    </div>
-                </div>
-
-                <!-- Tarjeta Modificar -->
-                <div class="perm-card @ClaseDeTarjeta(sesion, Permisos.Modificar)">
-                    <div class="card-icon icon-neutral">
-                        <svg class="card-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-                        </svg>
-                    </div>
-                    <div class="card-content">
-                        <h3>3. Modificar</h3>
-                        <p>Edición y actualización de datos existentes.</p>
-                        @RenderEstado(sesion, Permisos.Modificar)
-                    </div>
-                </div>
-
-                <!-- Tarjeta Eliminar -->
-                <div class="perm-card @ClaseDeTarjeta(sesion, Permisos.Eliminar)">
-                    <div class="card-icon icon-neutral">
-                        <svg class="card-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="3 6 5 6 21 6" />
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                            <line x1="10" y1="11" x2="10" y2="17" />
-                            <line x1="14" y1="11" x2="14" y2="17" />
-                        </svg>
-                    </div>
-                    <div class="card-content">
-                        <h3>4. Eliminar</h3>
-                        <p>Eliminación definitiva de registros del sistema.</p>
-                        @RenderEstado(sesion, Permisos.Eliminar)
-                    </div>
-                </div>
-            </div>
-
-            <!-- Panel de Administración Exclusivo -->
-            <VistaConPermiso Permiso="@Permisos.GestionarUsuarios">
-                <div class="admin-panel-card">
-                    <div class="admin-top">
-                        <span class="admin-badge">Panel Exclusivo</span>
-                    </div>
-                    <div class="admin-header">
-                        <div class="admin-icon-box">
-                            <svg class="admin-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                            </svg>
+                    @if (errorClientes is not null || errorUsuarios is not null || errorCategorias is not null)
+                    { <p class="dash-error" role="alert">Algunos datos no se pudieron cargar. Revisa la conexión e inténtalo de nuevo.</p> }
+                </section>
+            }
+            <VistaConPermiso Permiso="@Permisos.Consultar">
+                <section aria-labelledby="inventario"><div class="dash-section-title horizontal"><div><span class="dash-eyebrow">CONTROL DE EXISTENCIAS</span><h2 id="inventario">Inventario</h2></div><a href="administracion/productos">Ver productos →</a></div>
+                    @if (cargandoProductos) { <div class="dash-panel dash-state" role="status">Cargando inventario…</div> }
+                    else if (errorProductos is not null) { <div class="dash-panel dash-state dash-error" role="alert">No se pudo cargar el inventario. Comprueba la conexión e inténtalo de nuevo.</div> }
+                    else if (productos is not null)
+                    {
+                        <div class="dash-inventory">
+                            <article class="dash-panel"><h3>Estado del stock</h3><div class="dash-stock-summary"><div><span class="dash-stock-icon low">!</span><strong>@productos.Count(p => p.Stock is >= 1 and <= 5)</strong><span>Stock bajo<small>1 a 5 unidades</small></span></div><div><span class="dash-stock-icon out">×</span><strong>@productos.Count(p => p.Stock == 0)</strong><span>Agotados<small>0 unidades</small></span></div></div>
+                                <h3 class="dash-subtitle">Menor disponibilidad</h3>
+                                @if (productos.Count == 0) { <p class="dash-empty">Aún no hay productos registrados.</p> }
+                                else { <div class="dash-table-wrap"><table><thead><tr><th>Producto</th><th>Categoría</th><th>Disponible</th></tr></thead><tbody>
+                                    @foreach (var producto in productos.OrderBy(p => p.Stock).ThenBy(p => p.Nombre).Take(5)) { <tr><td>@producto.Nombre<small>@producto.Codigo</small></td><td>@producto.Categoria</td><td><span class="dash-stock-badge @ClaseStock(producto.Stock)">@producto.Stock</span></td></tr> }
+                                </tbody></table></div>
+                                @if (!productos.Any(p => p.Stock <= 5)) { <p class="dash-healthy">No hay productos con stock bajo ni agotados.</p> }
+                                }
+                            </article>
+                            <article class="dash-panel"><h3>Productos por categoría</h3><p class="dash-muted">Distribución del catálogo actual</p>
+                                @if (productos.Count == 0) { <p class="dash-empty">No hay datos para mostrar.</p> }
+                                else { <div class="dash-bars" role="img" aria-label="Distribución de productos por categoría">
+                                    @foreach (var grupo in productos.GroupBy(p => string.IsNullOrWhiteSpace(p.Categoria) ? "Sin categoría" : p.Categoria).OrderByDescending(g => g.Count()).ThenBy(g => g.Key)) { <div class="dash-bar-row"><div><span>@grupo.Key</span><strong>@grupo.Count()</strong></div><div class="dash-track"><span style="width:@(100.0 * grupo.Count() / productos.Count)%"></span></div></div> }
+                                </div> }
+                            </article>
                         </div>
-                        <div>
-                            <h3>Creación de Usuarios y Gestión de Roles</h3>
-                            <p>Tu rol cuenta con permisos administrativos. Desde el módulo de administración puedes gestionar usuarios y roles según los permisos de tu sesión.</p>
-                            <a href="administracion" class="admin-enlace">Ir a Administración</a>
-                        </div>
-                    </div>
-                </div>
+                    }
+                </section>
             </VistaConPermiso>
-        </Authorized>
-        <NotAuthorized>
-            <div class="guest-hero">
-                <div class="guest-logo">
-                    <svg class="guest-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 21h18M3 7v14M21 7v14M6 11h4M6 15h4M14 11h4M14 15h4M9 3h6v4H9z" />
-                    </svg>
-                </div>
-                <h1>Sistema de Gestión Empresarial (SGECAR)</h1>
-                <p class="guest-sub">Plataforma cliente-servidor con arquitectura moderna y control de acceso por roles.</p>
-                <div class="guest-actions">
-                    <a href="login" class="btn btn-primary-hero">
-                        <span>Iniciar Sesión</span>
-                        <svg class="btn-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="5" y1="12" x2="19" y2="12" />
-                            <polyline points="12 5 19 12 12 19" />
-                        </svg>
-                    </a>
-                    <a href="api-status" class="btn btn-secondary-hero">
-                        <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                        </svg>
-                        <span>Ver Diagnóstico de API</span>
-                    </a>
-                </div>
-            </div>
-        </NotAuthorized>
-    </AuthorizeView>
-</div>
-
-<style>
-    .dashboard-wrapper {
-        max-width: 1050px;
-        margin: 0 auto;
-        font-family: var(--font-sans);
-    }
-
-    .hero-welcome {
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-        color: #ffffff;
-        padding: 32px 36px;
-        border-radius: 16px;
-        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.2);
-        margin-bottom: 32px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .greeting-badge {
-        display: inline-block;
-        background-color: rgba(16, 185, 129, 0.15);
-        color: #34d399;
-        font-size: 0.75rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        padding: 4px 10px;
-        border-radius: 20px;
-        border: 1px solid rgba(16, 185, 129, 0.3);
-        margin-bottom: 12px;
-    }
-
-    .hero-welcome h1 {
-        margin: 0 0 10px 0;
-        font-size: 1.85rem;
-        font-weight: 800;
-        letter-spacing: -0.02em;
-    }
-
-    .hero-sub {
-        margin: 0;
-        color: #94a3b8;
-        font-size: 1rem;
-        line-height: 1.6;
-    }
-
-    .role-pill {
-        display: inline-block;
-        background: #2563eb;
-        color: #ffffff;
-        padding: 2px 10px;
-        border-radius: 12px;
-        font-weight: 700;
-        font-size: 0.85rem;
-    }
-
-    .section-title {
-        margin-bottom: 20px;
-    }
-
-    .section-title h2 {
-        margin: 0 0 6px 0;
-        font-size: 1.3rem;
-        color: #0f172a;
-        font-weight: 700;
-    }
-
-    .section-title p {
-        margin: 0;
-        color: #64748b;
-        font-size: 0.92rem;
-    }
-
-    .cards-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-        gap: 18px;
-        margin-bottom: 28px;
-    }
-
-    .perm-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 14px;
-        padding: 22px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .perm-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
-    }
-
-    .card-active {
-        border-top: 3px solid #2563eb;
-    }
-
-    .card-disabled {
-        opacity: 0.65;
-        background-color: #f8fafc;
-        border-top: 3px solid #cbd5e1;
-    }
-
-    .card-icon {
-        width: 44px;
-        height: 44px;
-        border-radius: 10px;
-        background: #f1f5f9;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 16px;
-        color: #64748b;
-        border: 1px solid #e2e8f0;
-        transition: all 0.2s ease;
-    }
-
-    .card-active .card-icon {
-        background: #f8fafc;
-        color: #475569;
-        border-color: #cbd5e1;
-    }
-
-    .card-disabled .card-icon {
-        background: #f1f5f9;
-        color: #94a3b8;
-    }
-
-    .card-icon-svg {
-        width: 22px;
-        height: 22px;
-    }
-
-    .card-content {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .card-content h3 {
-        margin: 0 0 6px 0;
-        font-size: 1.05rem;
-        color: #0f172a;
-        font-weight: 700;
-    }
-
-    .card-content p {
-        margin: 0 0 14px 0;
-        font-size: 0.85rem;
-        color: #64748b;
-        min-height: 38px;
-        line-height: 1.5;
-        flex: 1;
-    }
-
-    .status-badge {
-        display: inline-block;
-        padding: 5px 10px;
-        border-radius: 6px;
-        font-size: 0.78rem;
-        font-weight: 700;
-        width: fit-content;
-    }
-
-    .status-badge.allowed {
-        background-color: #ecfdf5;
-        color: #047857;
-        border: 1px solid #a7f3d0;
-    }
-
-    .status-badge.denied {
-        background-color: #fef2f2;
-        color: #b91c1c;
-        border: 1px solid #fecaca;
-    }
-
-    .admin-panel-card {
-        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-        border: 1px solid #cbd5e1;
-        border-radius: 14px;
-        padding: 24px 28px;
-        margin-top: 20px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
-    }
-
-    .admin-top {
-        margin-bottom: 12px;
-    }
-
-    .admin-badge {
-        display: inline-block;
-        background-color: #0f172a;
-        color: #ffffff;
-        font-size: 0.72rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        padding: 4px 10px;
-        border-radius: 12px;
-    }
-
-    .admin-header {
-        display: flex;
-        gap: 16px;
-        align-items: flex-start;
-    }
-
-    .admin-icon-box {
-        width: 44px;
-        height: 44px;
-        border-radius: 10px;
-        background: #ffffff;
-        border: 1px solid #cbd5e1;
-        color: #475569;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-
-    .admin-icon-svg {
-        width: 22px;
-        height: 22px;
-    }
-
-    .admin-header h3 {
-        margin: 0 0 6px 0;
-        font-size: 1.15rem;
-        color: #0f172a;
-        font-weight: 700;
-    }
-
-    .admin-header p {
-        margin: 0;
-        color: #475569;
-        font-size: 0.95rem;
-        line-height: 1.5;
-    }
-
-    /* Vista Invitado (Guest Hero) */
-    .guest-hero {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 20px;
-        padding: 60px 40px;
-        text-align: center;
-        max-width: 680px;
-        margin: 30px auto;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
-    }
-
-    .guest-logo {
-        width: 64px;
-        height: 64px;
-        border-radius: 16px;
-        background: #f8fafc;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 20px;
-        color: #475569;
-        border: 1px solid #e2e8f0;
-    }
-
-    .guest-icon-svg {
-        width: 32px;
-        height: 32px;
-    }
-
-    .guest-hero h1 {
-        margin: 0 0 12px 0;
-        font-size: 1.9rem;
-        font-weight: 800;
-        color: #0f172a;
-        letter-spacing: -0.02em;
-    }
-
-    .guest-sub {
-        margin: 0 auto 32px auto;
-        max-width: 500px;
-        color: #64748b;
-        font-size: 1.05rem;
-        line-height: 1.5;
-    }
-
-    .guest-actions {
-        display: flex;
-        justify-content: center;
-        gap: 16px;
-        flex-wrap: wrap;
-    }
-
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 12px 24px;
-        border-radius: 10px;
-        font-size: 0.95rem;
-        font-weight: 700;
-        text-decoration: none;
-        transition: all 0.2s ease;
-    }
-
-    .btn-arrow-svg, .btn-icon-svg {
-        width: 18px;
-        height: 18px;
-    }
-
-    .btn-primary-hero {
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-        color: #ffffff;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
-    }
-
-    .btn-primary-hero:hover {
-        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 18px rgba(37, 99, 235, 0.35);
-        color: #ffffff;
-    }
-
-    .btn-secondary-hero {
-        background: #f8fafc;
-        color: #334155;
-        border: 1px solid #cbd5e1;
-    }
-
-    .btn-secondary-hero:hover {
-        background: #f1f5f9;
-        color: #0f172a;
-        border-color: #94a3b8;
-    }
-
-    .admin-enlace {
-        display: inline-block;
-        margin-top: 10px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: var(--color-primary);
-        text-decoration: none;
-    }
-
-    .admin-enlace:hover {
-        text-decoration: underline;
-    }
-</style>
+            <section aria-labelledby="acciones"><div class="dash-section-title"><span class="dash-eyebrow">ACCESOS DIRECTOS</span><h2 id="acciones">Acciones rápidas</h2></div><div class="dash-links">
+                @if (sesion.User.TienePermiso(Permisos.Consultar) && sesion.User.TienePermiso(Permisos.Agregar)) { <a href="administracion/productos" title="Abre Productos y selecciona Nuevo producto"><span>＋</span><span><strong>Nuevo producto</strong><small>Desde el módulo de productos</small></span><b>→</b></a> }
+                <VistaConPermiso Permiso="@Permisos.Consultar"><a href="administracion/productos"><span>▣</span><span><strong>Consultar productos</strong><small>Explorar el catálogo</small></span><b>→</b></a><a href="reportes/productos"><span>▤</span><span><strong>Generar reporte</strong><small>Reporte de productos</small></span><b>→</b></a></VistaConPermiso>
+                <VistaConPermiso Permiso="@Permisos.GestionarClientes"><a href="administracion/clientes" title="Abre Clientes y selecciona Nuevo cliente"><span>＋</span><span><strong>Nuevo cliente</strong><small>Desde el módulo de clientes</small></span><b>→</b></a><a href="administracion/clientes"><span>♧</span><span><strong>Consultar clientes</strong><small>Explorar clientes</small></span><b>→</b></a></VistaConPermiso>
+                <VistaConPermiso Permiso="@Permisos.GestionarCategorias"><a href="administracion/categorias-productos"><span>▤</span><span><strong>Gestionar categorías</strong><small>Organizar productos</small></span><b>→</b></a></VistaConPermiso>
+                <VistaConPermiso Permiso="@Permisos.GestionarUsuarios"><a href="administracion/usuarios"><span>♙</span><span><strong>Gestionar usuarios</strong><small>Administrar accesos</small></span><b>→</b></a></VistaConPermiso>
+                <VistaConPermiso Permiso="@Permisos.GestionarRoles"><a href="administracion/roles"><span>◇</span><span><strong>Gestionar roles</strong><small>Administrar permisos</small></span><b>→</b></a></VistaConPermiso>
+                @if (!TieneAccesos(sesion.User)) { <p class="dash-empty">Tu rol no tiene acciones disponibles por ahora.</p> }
+            </div></section>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <div class="home-guest"><div class="guest-copy"><span class="dash-eyebrow">BIENVENIDO A SGECAR</span><h1>Tu gestión empresarial, en un solo lugar.</h1><p>Organiza productos, clientes y equipos con la información que necesitas para trabajar con claridad.</p><a href="login" class="guest-cta">Iniciar sesión <span aria-hidden="true">→</span></a></div><div class="guest-visual" aria-hidden="true"><div class="visual-top"><span>S</span><strong>SGECAR<small>Espacio de trabajo</small></strong></div><div class="visual-line wide"></div><div class="visual-line medium"></div><div class="visual-cards"><div>▣</div><div>♧</div><div>▤</div></div><div class="visual-line wide"></div><div class="visual-line short"></div></div></div>
+    </NotAuthorized>
+</AuthorizeView>
 
 @code {
-    // El estado de cada tarjeta sale de los claims de permisos del JWT.
-    // Esos claims se generan desde los booleanos del Rol almacenado en SQL Server.
+    private readonly CancellationTokenSource cancelacion = new();
+    private IReadOnlyList<ProductoResponse>? productos;
+    private IReadOnlyList<ClienteResponse>? clientes;
+    private IReadOnlyList<UsuarioResponse>? usuarios;
+    private IReadOnlyList<CategoriaProductoResponse>? categorias;
+    private bool cargandoProductos, cargandoClientes, cargandoUsuarios, cargandoCategorias;
+    private string? errorProductos, errorClientes, errorUsuarios, errorCategorias;
 
-    private static string ClaseDeTarjeta(AuthenticationState sesion, string permiso) =>
-        sesion.User.TienePermiso(permiso) ? "card-active" : "card-disabled";
-
-    private RenderFragment RenderEstado(AuthenticationState sesion, string permiso)
+    protected override async Task OnInitializedAsync()
     {
-        var permitido = sesion.User.TienePermiso(permiso);
-        var clase = permitido ? "allowed" : "denied";
-        var rol = sesion.User.ObtenerRol();
-
-        var texto = permitido
-            ? "✓ Permitido"
-            : $"✕ Bloqueado ({rol ?? "su rol"} no puede {Permisos.Describir(permiso)})";
-
-        return @<span class="status-badge @clase">@texto</span>;
+        var usuario = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+        if (usuario.Identity?.IsAuthenticated != true) return;
+        var tareas = new List<Task>();
+        if (usuario.TienePermiso(Permisos.Consultar)) { cargandoProductos = true; tareas.Add(CargarProductosAsync()); }
+        if (usuario.TienePermiso(Permisos.GestionarClientes)) { cargandoClientes = true; tareas.Add(CargarClientesAsync()); }
+        if (usuario.TienePermiso(Permisos.GestionarUsuarios)) { cargandoUsuarios = true; tareas.Add(CargarUsuariosAsync()); }
+        if (usuario.TienePermiso(Permisos.GestionarCategorias)) { cargandoCategorias = true; tareas.Add(CargarCategoriasAsync()); }
+        await Task.WhenAll(tareas);
     }
+    private async Task CargarProductosAsync()
+    {
+        try { var r = await ProductosApi.ObtenerAsync(null, null, null, cancelacion.Token); if (r.Exito && r.Valor is not null) productos = r.Valor; else errorProductos = r.Mensaje; }
+        catch (OperationCanceledException) when (cancelacion.IsCancellationRequested) { }
+        finally { cargandoProductos = false; }
+    }
+    private async Task CargarClientesAsync()
+    {
+        try { var r = await ClientesApi.ObtenerAsync(null, null, null, cancelacion.Token); if (r.Exito && r.Valor is not null) clientes = r.Valor; else errorClientes = r.Mensaje; }
+        catch (OperationCanceledException) when (cancelacion.IsCancellationRequested) { }
+        finally { cargandoClientes = false; }
+    }
+    private async Task CargarUsuariosAsync()
+    {
+        try { var r = await UsuariosApi.ObtenerAsync(null, null, null, null, cancelacion.Token); if (r.Exito && r.Valor is not null) usuarios = r.Valor; else errorUsuarios = r.Mensaje; }
+        catch (OperationCanceledException) when (cancelacion.IsCancellationRequested) { }
+        finally { cargandoUsuarios = false; }
+    }
+    private async Task CargarCategoriasAsync()
+    {
+        try { var r = await CategoriasApi.ObtenerAsync(null, cancelacion.Token); if (r.Exito && r.Valor is not null) categorias = r.Valor; else errorCategorias = r.Mensaje; }
+        catch (OperationCanceledException) when (cancelacion.IsCancellationRequested) { }
+        finally { cargandoCategorias = false; }
+    }
+    private static string Valor<T>(IReadOnlyList<T>? lista, bool cargando, string? error) => cargando ? "…" : error is not null || lista is null ? "—" : lista.Count.ToString();
+    private static string Valor(int? total, bool cargando, string? error) => cargando ? "…" : error is not null || total is null ? "—" : total.Value.ToString();
+    private static string ClaseStock(int stock) => stock == 0 ? "out" : stock <= 5 ? "low" : "normal";
+    private static bool TieneAccesos(System.Security.Claims.ClaimsPrincipal usuario) => usuario.TienePermiso(Permisos.Consultar) || usuario.TienePermiso(Permisos.GestionarClientes) || usuario.TienePermiso(Permisos.GestionarCategorias) || usuario.TienePermiso(Permisos.GestionarUsuarios) || usuario.TienePermiso(Permisos.GestionarRoles);
+    public void Dispose() { cancelacion.Cancel(); cancelacion.Dispose(); }
 }
