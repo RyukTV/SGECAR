@@ -1,0 +1,5 @@
+.connection-indicator { display:inline-flex; align-items:center; gap:7px; white-space:nowrap; color:#94a3b8; font-size:.74rem; font-weight:650; padding:6px 9px; border:1px solid #334155; border-radius:100px; transition:color 200ms ease; }
+.connection-dot { width:7px; height:7px; border-radius:50%; background:#94a3b8; transition:background 200ms ease; }
+.connection-indicator.connected { color:#bbf7d0; }.connection-indicator.connected .connection-dot { background:#16a34a; box-shadow:0 0 0 3px rgba(22,163,74,.18); }
+.connection-indicator.disconnected { color:#fecaca; }.connection-indicator.disconnected .connection-dot { background:#dc2626; box-shadow:0 0 0 3px rgba(220,38,38,.18); }
+@media (prefers-reduced-motion:reduce) { .connection-indicator,.connection-dot { transition:none; } }
