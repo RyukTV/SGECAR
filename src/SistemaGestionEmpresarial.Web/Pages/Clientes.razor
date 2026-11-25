@@ -1,5 +1,5 @@
 @page "/administracion/clientes"
-@attribute [Authorize(Policy = PoliticasDePermiso.GestionarClientes)]
+@attribute [Authorize(Policy = PoliticasDePermiso.Consultar)]
 @inject ClientesApiService ClientesApi
 @inject IJSRuntime JS
 @using System.ComponentModel.DataAnnotations
@@ -13,7 +13,9 @@
             <h1>Mantenimiento de Clientes</h1>
             <p>Consulte y mantenga los datos de contacto de los clientes.</p>
         </div>
-        <button class="gestion-btn gestion-btn-primary" @onclick="PrepararCreacion">Nuevo cliente</button>
+        <VistaConPermiso Permiso="@Permisos.Agregar">
+            <button class="gestion-btn gestion-btn-primary" @onclick="PrepararCreacion">Nuevo cliente</button>
+        </VistaConPermiso>
     </header>
 
     @if (!string.IsNullOrWhiteSpace(mensaje))
@@ -109,8 +111,12 @@
                             <td>@cliente.Correo</td>
                             <td>@cliente.Direccion</td>
                             <td class="gestion-actions-tabla">
-                                <button class="gestion-btn gestion-btn-small" @onclick="() => PrepararEdicion(cliente)">Editar</button>
-                                <button class="gestion-btn gestion-btn-danger gestion-btn-small" @onclick="() => EliminarAsync(cliente)">Eliminar</button>
+                                <VistaConPermiso Permiso="@Permisos.Modificar">
+                                    <button class="gestion-btn gestion-btn-small" @onclick="() => PrepararEdicion(cliente)">Editar</button>
+                                </VistaConPermiso>
+                                <VistaConPermiso Permiso="@Permisos.Eliminar">
+                                    <button class="gestion-btn gestion-btn-danger gestion-btn-small" @onclick="() => EliminarAsync(cliente)">Eliminar</button>
+                                </VistaConPermiso>
                             </td>
                         </tr>
                     }

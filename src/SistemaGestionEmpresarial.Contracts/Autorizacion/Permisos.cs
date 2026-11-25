@@ -13,7 +13,6 @@ public static class Permisos
     public const string Eliminar = "Eliminar";
     public const string GestionarUsuarios = "GestionarUsuarios";
     public const string GestionarRoles = "GestionarRoles";
-    public const string GestionarClientes = "GestionarClientes";
     public const string GestionarCategorias = "GestionarCategorias";
 
     public static IReadOnlyList<string> Todos { get; } = new[]
@@ -24,7 +23,6 @@ public static class Permisos
         Eliminar,
         GestionarUsuarios,
         GestionarRoles,
-        GestionarClientes,
         GestionarCategorias
     };
 
@@ -36,7 +34,6 @@ public static class Permisos
         Eliminar => "eliminar registros",
         GestionarUsuarios => "gestionar usuarios",
         GestionarRoles => "gestionar roles",
-        GestionarClientes => "gestionar clientes",
         GestionarCategorias => "gestionar categorías de productos",
         _ => "realizar esta acción"
     };

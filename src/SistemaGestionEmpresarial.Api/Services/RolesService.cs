@@ -37,7 +37,6 @@ public sealed class RolesService : IRolesService
                 PuedeConsultar = rol.PuedeConsultar,
                 PuedeGestionarUsuarios = rol.PuedeGestionarUsuarios,
                 PuedeGestionarRoles = rol.PuedeGestionarRoles,
-                PuedeGestionarClientes = rol.PuedeGestionarClientes,
                 PuedeGestionarCategorias = rol.PuedeGestionarCategorias
             })
             .ToListAsync(cancellationToken);
@@ -57,7 +56,6 @@ public sealed class RolesService : IRolesService
                 PuedeConsultar = rol.PuedeConsultar,
                 PuedeGestionarUsuarios = rol.PuedeGestionarUsuarios,
                 PuedeGestionarRoles = rol.PuedeGestionarRoles,
-                PuedeGestionarClientes = rol.PuedeGestionarClientes,
                 PuedeGestionarCategorias = rol.PuedeGestionarCategorias
             })
             .SingleOrDefaultAsync(cancellationToken);
@@ -76,7 +74,7 @@ public sealed class RolesService : IRolesService
         var rol = new Rol { Nombre = nombre };
         AplicarPermisos(rol, request.PuedeAgregar, request.PuedeModificar, request.PuedeEliminar,
             request.PuedeConsultar, request.PuedeGestionarUsuarios, request.PuedeGestionarRoles,
-            request.PuedeGestionarClientes, request.PuedeGestionarCategorias);
+            request.PuedeGestionarCategorias);
 
         _dbContext.Roles.Add(rol);
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -104,7 +102,7 @@ public sealed class RolesService : IRolesService
         rol.Nombre = nombre;
         AplicarPermisos(rol, request.PuedeAgregar, request.PuedeModificar, request.PuedeEliminar,
             request.PuedeConsultar, request.PuedeGestionarUsuarios, request.PuedeGestionarRoles,
-            request.PuedeGestionarClientes, request.PuedeGestionarCategorias);
+            request.PuedeGestionarCategorias);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
         return ResultadoCrud<RolResponse>.Exito(Mapear(rol), "Rol actualizado correctamente.");
@@ -132,7 +130,6 @@ public sealed class RolesService : IRolesService
         bool consultar,
         bool gestionarUsuarios,
         bool gestionarRoles,
-        bool gestionarClientes,
         bool gestionarCategorias)
     {
         rol.PuedeAgregar = agregar;
@@ -141,7 +138,6 @@ public sealed class RolesService : IRolesService
         rol.PuedeConsultar = consultar;
         rol.PuedeGestionarUsuarios = gestionarUsuarios;
         rol.PuedeGestionarRoles = gestionarRoles;
-        rol.PuedeGestionarClientes = gestionarClientes;
         rol.PuedeGestionarCategorias = gestionarCategorias;
     }
 
@@ -155,7 +151,6 @@ public sealed class RolesService : IRolesService
         PuedeConsultar = rol.PuedeConsultar,
         PuedeGestionarUsuarios = rol.PuedeGestionarUsuarios,
         PuedeGestionarRoles = rol.PuedeGestionarRoles,
-        PuedeGestionarClientes = rol.PuedeGestionarClientes,
         PuedeGestionarCategorias = rol.PuedeGestionarCategorias
     };
 }

@@ -29,39 +29,10 @@
                 <span>Inicio</span>
             </NavLink>
 
-            @* Estas entradas solo aparecen si el rol tiene el permiso correspondiente.
+            @* La barra muestra solo los módulos de trabajo diario, según el permiso del rol.
+               Usuarios, Roles y Categorías se abren desde el panel de administración (perfil).
                El menú refleja los permisos; no los sustituye: la API los vuelve a exigir. *@
             <VistaConPermiso Permiso="@Permisos.Consultar">
-                <NavLink href="operaciones" class="nav-item">
-                    <svg class="icon-svg nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M9 11H3v10h6zM15 3H9v18h6zM21 7h-6v14h6z" />
-                    </svg>
-                    <span>Operaciones</span>
-                </NavLink>
-            </VistaConPermiso>
-
-            <VistaConPermiso Permiso="@Permisos.GestionarUsuarios">
-                <NavLink href="administracion/usuarios" class="nav-item">
-                    <svg class="icon-svg nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                        <circle cx="9" cy="7" r="4" />
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-                    </svg>
-                    <span>Usuarios</span>
-                </NavLink>
-            </VistaConPermiso>
-
-            <VistaConPermiso Permiso="@Permisos.GestionarRoles">
-                <NavLink href="administracion/roles" class="nav-item">
-                    <svg class="icon-svg nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 2a5 5 0 0 0-5 5v3H5a2 2 0 0 0-2 2v8h18v-8a2 2 0 0 0-2-2h-2V7a5 5 0 0 0-5-5z" />
-                        <path d="M9 10V7a3 3 0 0 1 6 0v3" />
-                    </svg>
-                    <span>Roles</span>
-                </NavLink>
-            </VistaConPermiso>
-
-            <VistaConPermiso Permiso="@Permisos.GestionarClientes">
                 <NavLink href="administracion/clientes" class="nav-item">
                     <svg class="icon-svg nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -70,9 +41,7 @@
                     </svg>
                     <span>Clientes</span>
                 </NavLink>
-            </VistaConPermiso>
 
-            <VistaConPermiso Permiso="@Permisos.Consultar">
                 <NavLink href="administracion/productos" class="nav-item">
                     <svg class="icon-svg nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
@@ -81,18 +50,22 @@
                     </svg>
                     <span>Productos</span>
                 </NavLink>
-            </VistaConPermiso>
 
-            <NavLink href="api-status" class="nav-item">
-                <svg class="icon-svg nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                </svg>
-                <span>Diagnóstico</span>
-            </NavLink>
+                <NavLink href="reportes/productos" class="nav-item">
+                    <svg class="icon-svg nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                    </svg>
+                    <span>Reportes</span>
+                </NavLink>
+            </VistaConPermiso>
 
             <AuthorizeView>
                 <Authorized>
-                    <div class="user-chip">
+                    @* El perfil lleva al panel de administración, que solo muestra los módulos permitidos al rol. *@
+                    <NavLink href="administracion" class="user-chip" Match="NavLinkMatch.All" title="Ir al panel de administración">
                         <div class="user-avatar-icon">
                             <svg class="icon-svg user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
@@ -105,7 +78,7 @@
                                 @(context.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Usuario")
                             </span>
                         </div>
-                    </div>
+                    </NavLink>
                     <button class="btn-logout" @onclick="CerrarSesionAsync" title="Cerrar sesión activa">
                         <svg class="icon-svg logout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -254,6 +227,14 @@
         padding: 4px 12px 4px 6px;
         border-radius: 20px;
         border: 1px solid #334155;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .user-chip:hover, .user-chip.active {
+        background-color: #334155;
+        border-color: #475569;
     }
 
     .user-avatar-icon {

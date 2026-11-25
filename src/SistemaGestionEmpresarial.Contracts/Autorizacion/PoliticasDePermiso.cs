@@ -19,7 +19,6 @@ public static class PoliticasDePermiso
     public const string Eliminar = Prefijo + Permisos.Eliminar;
     public const string GestionarUsuarios = Prefijo + Permisos.GestionarUsuarios;
     public const string GestionarRoles = Prefijo + Permisos.GestionarRoles;
-    public const string GestionarClientes = Prefijo + Permisos.GestionarClientes;
     public const string GestionarCategorias = Prefijo + Permisos.GestionarCategorias;
 
     /// <summary>Nombre de la política que exige un permiso concreto, por ejemplo "Permiso:Eliminar".</summary>

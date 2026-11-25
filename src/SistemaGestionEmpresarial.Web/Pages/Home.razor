@@ -11,12 +11,12 @@
     <Authorized>
         <div class="home-dashboard">
             <header class="dash-hero"><div><span class="dash-eyebrow">PANEL GENERAL</span><h1>Hola, @sesion.User.Identity?.Name</h1><p>Resumen de tu espacio de trabajo <span class="dash-role">@sesion.User.ObtenerRol()</span></p></div></header>
-            @if (sesion.User.TienePermiso(Permisos.Consultar) || sesion.User.TienePermiso(Permisos.GestionarClientes) || sesion.User.TienePermiso(Permisos.GestionarUsuarios) || sesion.User.TienePermiso(Permisos.GestionarCategorias))
+            @if (sesion.User.TienePermiso(Permisos.Consultar) || sesion.User.TienePermiso(Permisos.GestionarUsuarios) || sesion.User.TienePermiso(Permisos.GestionarCategorias))
             {
                 <section aria-labelledby="resumen"><div class="dash-section-title"><span class="dash-eyebrow">VISTA GENERAL</span><h2 id="resumen">Resumen</h2></div>
                     <div class="dash-metrics">
                         <VistaConPermiso Permiso="@Permisos.Consultar"><article class="dash-metric"><span class="dash-icon blue">▣</span><span>Productos</span><strong>@Valor(productos, cargandoProductos, errorProductos)</strong><small>Registrados en el catálogo</small></article></VistaConPermiso>
-                        <VistaConPermiso Permiso="@Permisos.GestionarClientes"><article class="dash-metric"><span class="dash-icon purple">♧</span><span>Clientes</span><strong>@Valor(clientes, cargandoClientes, errorClientes)</strong><small>Registrados en el sistema</small></article></VistaConPermiso>
+                        <VistaConPermiso Permiso="@Permisos.Consultar"><article class="dash-metric"><span class="dash-icon purple">♧</span><span>Clientes</span><strong>@Valor(clientes, cargandoClientes, errorClientes)</strong><small>Registrados en el sistema</small></article></VistaConPermiso>
                         <VistaConPermiso Permiso="@Permisos.GestionarUsuarios"><article class="dash-metric"><span class="dash-icon green">♙</span><span>Usuarios activos</span><strong>@Valor(usuarios?.Count(u => u.Activo), cargandoUsuarios, errorUsuarios)</strong><small>Con acceso habilitado</small></article></VistaConPermiso>
                         <VistaConPermiso Permiso="@Permisos.GestionarCategorias"><article class="dash-metric"><span class="dash-icon amber">▤</span><span>Categorías</span><strong>@Valor(categorias, cargandoCategorias, errorCategorias)</strong><small>Tipos de producto</small></article></VistaConPermiso>
                     </div>
@@ -53,7 +53,8 @@
             <section aria-labelledby="acciones"><div class="dash-section-title"><span class="dash-eyebrow">ACCESOS DIRECTOS</span><h2 id="acciones">Acciones rápidas</h2></div><div class="dash-links">
                 @if (sesion.User.TienePermiso(Permisos.Consultar) && sesion.User.TienePermiso(Permisos.Agregar)) { <a href="administracion/productos" title="Abre Productos y selecciona Nuevo producto"><span>＋</span><span><strong>Nuevo producto</strong><small>Desde el módulo de productos</small></span><b>→</b></a> }
                 <VistaConPermiso Permiso="@Permisos.Consultar"><a href="administracion/productos"><span>▣</span><span><strong>Consultar productos</strong><small>Explorar el catálogo</small></span><b>→</b></a><a href="reportes/productos"><span>▤</span><span><strong>Generar reporte</strong><small>Reporte de productos</small></span><b>→</b></a></VistaConPermiso>
-                <VistaConPermiso Permiso="@Permisos.GestionarClientes"><a href="administracion/clientes" title="Abre Clientes y selecciona Nuevo cliente"><span>＋</span><span><strong>Nuevo cliente</strong><small>Desde el módulo de clientes</small></span><b>→</b></a><a href="administracion/clientes"><span>♧</span><span><strong>Consultar clientes</strong><small>Explorar clientes</small></span><b>→</b></a></VistaConPermiso>
+                @if (sesion.User.TienePermiso(Permisos.Consultar) && sesion.User.TienePermiso(Permisos.Agregar)) { <a href="administracion/clientes" title="Abre Clientes y selecciona Nuevo cliente"><span>＋</span><span><strong>Nuevo cliente</strong><small>Desde el módulo de clientes</small></span><b>→</b></a> }
+                <VistaConPermiso Permiso="@Permisos.Consultar"><a href="administracion/clientes"><span>♧</span><span><strong>Consultar clientes</strong><small>Explorar clientes</small></span><b>→</b></a></VistaConPermiso>
                 <VistaConPermiso Permiso="@Permisos.GestionarCategorias"><a href="administracion/categorias-productos"><span>▤</span><span><strong>Gestionar categorías</strong><small>Organizar productos</small></span><b>→</b></a></VistaConPermiso>
                 <VistaConPermiso Permiso="@Permisos.GestionarUsuarios"><a href="administracion/usuarios"><span>♙</span><span><strong>Gestionar usuarios</strong><small>Administrar accesos</small></span><b>→</b></a></VistaConPermiso>
                 <VistaConPermiso Permiso="@Permisos.GestionarRoles"><a href="administracion/roles"><span>◇</span><span><strong>Gestionar roles</strong><small>Administrar permisos</small></span><b>→</b></a></VistaConPermiso>
@@ -81,7 +82,7 @@
         if (usuario.Identity?.IsAuthenticated != true) return;
         var tareas = new List<Task>();
         if (usuario.TienePermiso(Permisos.Consultar)) { cargandoProductos = true; tareas.Add(CargarProductosAsync()); }
-        if (usuario.TienePermiso(Permisos.GestionarClientes)) { cargandoClientes = true; tareas.Add(CargarClientesAsync()); }
+        if (usuario.TienePermiso(Permisos.Consultar)) { cargandoClientes = true; tareas.Add(CargarClientesAsync()); }
         if (usuario.TienePermiso(Permisos.GestionarUsuarios)) { cargandoUsuarios = true; tareas.Add(CargarUsuariosAsync()); }
         if (usuario.TienePermiso(Permisos.GestionarCategorias)) { cargandoCategorias = true; tareas.Add(CargarCategoriasAsync()); }
         await Task.WhenAll(tareas);
@@ -113,6 +114,6 @@
     private static string Valor<T>(IReadOnlyList<T>? lista, bool cargando, string? error) => cargando ? "…" : error is not null || lista is null ? "—" : lista.Count.ToString();
     private static string Valor(int? total, bool cargando, string? error) => cargando ? "…" : error is not null || total is null ? "—" : total.Value.ToString();
     private static string ClaseStock(int stock) => stock == 0 ? "out" : stock <= 5 ? "low" : "normal";
-    private static bool TieneAccesos(System.Security.Claims.ClaimsPrincipal usuario) => usuario.TienePermiso(Permisos.Consultar) || usuario.TienePermiso(Permisos.GestionarClientes) || usuario.TienePermiso(Permisos.GestionarCategorias) || usuario.TienePermiso(Permisos.GestionarUsuarios) || usuario.TienePermiso(Permisos.GestionarRoles);
+    private static bool TieneAccesos(System.Security.Claims.ClaimsPrincipal usuario) => usuario.TienePermiso(Permisos.Consultar) || usuario.TienePermiso(Permisos.GestionarCategorias) || usuario.TienePermiso(Permisos.GestionarUsuarios) || usuario.TienePermiso(Permisos.GestionarRoles);
     public void Dispose() { cancelacion.Cancel(); cancelacion.Dispose(); }
 }
