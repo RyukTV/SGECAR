@@ -90,15 +90,16 @@
 
 <style>
     .admin-wrapper {
-        max-width: 1000px;
+        max-width: 1200px;
         margin: 0 auto;
+        animation: sgecar-enter 220ms ease-out both;
     }
 
     .admin-header h1 {
         margin: 0 0 8px;
-        font-size: 1.6rem;
+        font-size: clamp(1.5rem, 2.5vw, 1.8rem);
         font-weight: 800;
-        letter-spacing: -0.02em;
+        letter-spacing: -0.03em;
         color: var(--color-text-primary);
     }
 
@@ -107,12 +108,12 @@
         max-width: 640px;
         color: var(--color-text-secondary);
         line-height: 1.55;
-        font-size: 0.92rem;
+        font-size: 0.9rem;
     }
 
     .estado {
         padding: 14px 16px;
-        border-radius: 8px;
+        border-radius: 10px;
         background-color: var(--color-surface);
         border: 1px solid var(--color-border);
         color: var(--color-text-secondary);
@@ -129,8 +130,8 @@
         overflow-x: auto;
         background-color: var(--color-surface);
         border: 1px solid var(--color-border);
-        border-radius: 12px;
-        box-shadow: var(--shadow-sm);
+        border-radius: 14px;
+        box-shadow: 0 2px 9px rgba(15, 23, 42, .035);
     }
 
     .tabla-permisos {
@@ -141,19 +142,27 @@
 
     .tabla-permisos th,
     .tabla-permisos td {
-        padding: 12px 14px;
+        padding: 13px 16px;
         text-align: left;
         border-bottom: 1px solid var(--color-border);
         white-space: nowrap;
     }
 
     .tabla-permisos thead th {
-        font-size: 0.72rem;
+        font-size: 0.71rem;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: var(--color-text-muted);
-        background-color: var(--color-surface-hover);
+        letter-spacing: 0.06em;
+        color: #64748b;
+        background-color: #f8fafc;
+    }
+
+    .tabla-permisos tbody tr {
+        transition: background-color 140ms ease;
+    }
+
+    .tabla-permisos tbody tr:hover {
+        background-color: #f8fafc;
     }
 
     .tabla-permisos tbody th {

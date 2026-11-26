@@ -22,7 +22,7 @@
 
     <form class="gestion-search" @onsubmit="BuscarAsync" @onsubmit:preventDefault>
         <input @bind="buscar" placeholder="Buscar por nombre del rol" aria-label="Buscar roles" />
-        <button class="gestion-btn" type="submit" disabled="@cargando">Buscar</button>
+        <button class="gestion-btn gestion-btn-primary" type="submit" disabled="@cargando">Buscar</button>
         <button class="gestion-btn gestion-btn-light" type="button" @onclick="LimpiarBusquedaAsync" disabled="@cargando">Limpiar</button>
     </form>
 
@@ -72,13 +72,13 @@
                     {
                         <tr>
                             <td><strong>@rol.Nombre</strong></td>
-                            <td>@Marca(rol.PuedeConsultar)</td>
-                            <td>@Marca(rol.PuedeAgregar)</td>
-                            <td>@Marca(rol.PuedeModificar)</td>
-                            <td>@Marca(rol.PuedeEliminar)</td>
-                            <td>@Marca(rol.PuedeGestionarUsuarios)</td>
-                            <td>@Marca(rol.PuedeGestionarRoles)</td>
-                            <td>@Marca(rol.PuedeGestionarCategorias)</td>
+                            <td><span class="gestion-badge @(rol.PuedeConsultar ? "activo" : "inactivo")">@Marca(rol.PuedeConsultar)</span></td>
+                            <td><span class="gestion-badge @(rol.PuedeAgregar ? "activo" : "inactivo")">@Marca(rol.PuedeAgregar)</span></td>
+                            <td><span class="gestion-badge @(rol.PuedeModificar ? "activo" : "inactivo")">@Marca(rol.PuedeModificar)</span></td>
+                            <td><span class="gestion-badge @(rol.PuedeEliminar ? "activo" : "inactivo")">@Marca(rol.PuedeEliminar)</span></td>
+                            <td><span class="gestion-badge @(rol.PuedeGestionarUsuarios ? "activo" : "inactivo")">@Marca(rol.PuedeGestionarUsuarios)</span></td>
+                            <td><span class="gestion-badge @(rol.PuedeGestionarRoles ? "activo" : "inactivo")">@Marca(rol.PuedeGestionarRoles)</span></td>
+                            <td><span class="gestion-badge @(rol.PuedeGestionarCategorias ? "activo" : "inactivo")">@Marca(rol.PuedeGestionarCategorias)</span></td>
                             <td class="gestion-actions-tabla">
                                 <button class="gestion-btn gestion-btn-small" @onclick="() => PrepararEdicion(rol)">Editar</button>
                                 <button class="gestion-btn gestion-btn-danger gestion-btn-small" @onclick="() => EliminarAsync(rol)">Eliminar</button>

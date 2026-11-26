@@ -129,52 +129,438 @@ body {
     content: var(--blazor-load-percentage-text, "Cargando...");
 }
 
-/* Formularios y tablas del módulo administrativo. */
-.gestion-wrapper { max-width: 1180px; margin: 0 auto; }
-.gestion-header { display: flex; justify-content: space-between; gap: 20px; align-items: flex-end; margin-bottom: 22px; }
-.gestion-header h1 { margin: 5px 0; font-size: 1.65rem; color: var(--color-text-primary); }
-.gestion-header p, .gestion-nota { margin: 0; color: var(--color-text-muted); font-size: .88rem; }
-.gestion-volver { color: var(--color-primary); text-decoration: none; font-size: .82rem; font-weight: 700; }
-.gestion-search { display: flex; gap: 8px; margin-bottom: 18px; }
-.gestion-search input { flex: 1; min-width: 220px; }
-.gestion-search input, .gestion-panel input[type="text"], .gestion-panel input[type="number"], .gestion-panel input[type="password"], .gestion-panel select {
-    padding: 9px 11px; border: 1px solid var(--color-border); border-radius: 7px; font: inherit; background: #fff;
+/* Formularios, tablas y tarjetas de los módulos administrativos. */
+@keyframes sgecar-enter {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
 }
-.gestion-btn { border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text-primary); border-radius: 7px; padding: 8px 13px; font: inherit; font-size: .84rem; font-weight: 700; cursor: pointer; }
-.gestion-btn:disabled { opacity: .55; cursor: wait; }
-.gestion-btn-primary { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
-.gestion-btn-light { background: #f8fafc; }
-.gestion-btn-danger { color: #b91c1c; border-color: #fecaca; background: #fff7f7; }
-.gestion-btn-small { padding: 5px 9px; font-size: .76rem; }
-.gestion-panel { padding: 20px; margin-bottom: 20px; border: 1px solid var(--color-border); border-radius: 11px; background: var(--color-surface); box-shadow: var(--shadow-sm); }
-.gestion-panel h2 { margin: 0 0 16px; font-size: 1.15rem; }
-.gestion-panel label { display: flex; flex-direction: column; gap: 6px; font-size: .82rem; font-weight: 700; color: var(--color-text-secondary); }
-.gestion-grid { display: grid; grid-template-columns: repeat(2, minmax(220px, 1fr)); gap: 14px; }
-.gestion-check { flex-direction: row !important; align-items: center; align-self: end; padding-bottom: 10px; }
-.gestion-actions { display: flex; gap: 8px; margin: 18px 0 10px; }
-.gestion-permisos { display: grid; grid-template-columns: repeat(3, minmax(160px, 1fr)); gap: 12px; margin-top: 18px; }
-.gestion-permisos label { flex-direction: row; align-items: center; padding: 10px; border: 1px solid var(--color-border); border-radius: 7px; }
-.gestion-alert, .gestion-estado { padding: 12px 14px; margin-bottom: 16px; border-radius: 8px; border: 1px solid var(--color-border); }
-.gestion-alert-ok { color: #065f46; background: #ecfdf5; border-color: #a7f3d0; }
-.gestion-alert-error { color: #991b1b; background: #fef2f2; border-color: #fecaca; }
-.gestion-tabla-scroll { overflow-x: auto; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); }
-.gestion-tabla { width: 100%; border-collapse: collapse; font-size: .84rem; }
-.gestion-tabla th, .gestion-tabla td { padding: 11px 13px; text-align: left; border-bottom: 1px solid var(--color-border); white-space: nowrap; }
-.gestion-tabla thead th { color: var(--color-text-muted); background: #f8fafc; font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; }
-.gestion-tabla tbody tr:last-child td { border-bottom: none; }
-.gestion-actions-tabla { display: flex; gap: 6px; }
-.gestion-badge { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: .72rem; font-weight: 800; }
+
+.gestion-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    animation: sgecar-enter 220ms ease-out both;
+}
+
+.gestion-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    align-items: flex-end;
+    margin-bottom: 24px;
+}
+
+.gestion-header h1 {
+    margin: 6px 0 6px;
+    font-size: clamp(1.5rem, 2.5vw, 1.8rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--color-text-primary);
+}
+
+.gestion-header p,
+.gestion-nota {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: .9rem;
+    line-height: 1.5;
+}
+
+.gestion-nota {
+    margin-top: 12px;
+    font-size: .82rem;
+    color: var(--color-text-muted);
+}
+
+.gestion-volver {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--color-primary);
+    text-decoration: none;
+    font-size: .82rem;
+    font-weight: 700;
+    transition: color 160ms ease, transform 160ms ease;
+}
+
+.gestion-volver:hover {
+    color: var(--color-primary-hover);
+    transform: translateX(-2px);
+}
+
+.gestion-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 16px 18px;
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    background: var(--color-surface);
+    box-shadow: 0 2px 9px rgba(15, 23, 42, .035);
+}
+
+.gestion-search input {
+    flex: 1;
+    min-width: 220px;
+}
+
+.gestion-search input,
+.gestion-panel input:not([type="checkbox"]):not([type="radio"]),
+.gestion-panel select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--color-border);
+    border-radius: 8px;
+    font: inherit;
+    font-size: .88rem;
+    color: var(--color-text-primary);
+    background: #f8fafc;
+    transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.gestion-search input:focus,
+.gestion-panel input:not([type="checkbox"]):not([type="radio"]):focus,
+.gestion-panel select:focus {
+    outline: none;
+    background: #ffffff;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.gestion-panel input:disabled,
+.gestion-panel select:disabled {
+    background: #f1f5f9;
+    color: var(--color-text-muted);
+    cursor: not-allowed;
+}
+
+.gestion-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    border-radius: 8px;
+    padding: 9px 15px;
+    font: inherit;
+    font-size: .84rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.gestion-btn:hover:not(:disabled) {
+    background: var(--color-surface-hover);
+    border-color: var(--color-border-subtle);
+    transform: translateY(-1px);
+}
+
+.gestion-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.gestion-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+}
+
+.gestion-btn:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+}
+
+.gestion-btn-primary {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, .18);
+}
+
+.gestion-btn-primary:hover:not(:disabled) {
+    background: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, .25);
+}
+
+.gestion-btn-light {
+    background: #f8fafc;
+    color: var(--color-text-secondary);
+}
+
+.gestion-btn-light:hover:not(:disabled) {
+    background: #f1f5f9;
+    color: var(--color-text-primary);
+    border-color: var(--color-border-subtle);
+}
+
+.gestion-btn-danger {
+    color: #b91c1c;
+    border-color: #fecaca;
+    background: #fff7f7;
+}
+
+.gestion-btn-danger:hover:not(:disabled) {
+    background: #fee2e2;
+    border-color: #fca5a5;
+    color: #991b1b;
+}
+
+.gestion-btn-small {
+    padding: 6px 11px;
+    font-size: .76rem;
+    border-radius: 7px;
+}
+
+.gestion-panel {
+    padding: 22px 24px;
+    margin-bottom: 20px;
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    background: var(--color-surface);
+    box-shadow: 0 2px 9px rgba(15, 23, 42, .035);
+    animation: sgecar-enter 200ms ease-out both;
+}
+
+.gestion-panel h2 {
+    margin: 0 0 18px;
+    font-size: 1.08rem;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    color: var(--color-text-primary);
+}
+
+.gestion-panel label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: .8rem;
+    font-weight: 700;
+    color: var(--color-text-secondary);
+}
+
+.gestion-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+.gestion-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.gestion-check {
+    flex-direction: row !important;
+    align-items: center;
+    align-self: end;
+    padding-bottom: 10px;
+    cursor: pointer;
+}
+
+.gestion-check input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-primary);
+    cursor: pointer;
+}
+
+.gestion-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 18px 0 4px;
+}
+
+.gestion-header .gestion-actions {
+    margin: 0;
+}
+
+.gestion-permisos {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(160px, 1fr));
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.gestion-permisos label {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 13px;
+    border: 1px solid var(--color-border);
+    border-radius: 9px;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.gestion-permisos label:hover {
+    border-color: var(--color-primary-border);
+    background: var(--color-primary-light);
+}
+
+.gestion-permisos input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-primary);
+    cursor: pointer;
+}
+
+.gestion-alert,
+.gestion-estado {
+    padding: 13px 16px;
+    margin-bottom: 18px;
+    border-radius: 10px;
+    border: 1px solid var(--color-border);
+    font-size: .88rem;
+    line-height: 1.45;
+    animation: sgecar-enter 180ms ease-out both;
+}
+
+.gestion-estado {
+    background: var(--color-surface);
+    color: var(--color-text-secondary);
+}
+
+.gestion-alert-ok {
+    color: #065f46;
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+    font-weight: 500;
+}
+
+.gestion-alert-error {
+    color: #991b1b;
+    background: #fef2f2;
+    border-color: #fecaca;
+    font-weight: 500;
+}
+
+.gestion-tabla-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    background: var(--color-surface);
+    box-shadow: 0 2px 9px rgba(15, 23, 42, .035);
+    animation: sgecar-enter 220ms ease-out both;
+}
+
+.gestion-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .85rem;
+}
+
+.gestion-tabla th,
+.gestion-tabla td {
+    padding: 13px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+    white-space: nowrap;
+}
+
+.gestion-tabla thead th {
+    color: #64748b;
+    background: #f8fafc;
+    font-size: .71rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+}
+
+.gestion-tabla tbody tr {
+    transition: background-color 140ms ease;
+}
+
+.gestion-tabla tbody tr:hover {
+    background: #f8fafc;
+}
+
+.gestion-tabla tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.gestion-actions-tabla {
+    display: flex;
+    gap: 8px;
+}
+
+.gestion-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: .73rem;
+    font-weight: 700;
+}
+
 .gestion-badge.activo { background: #dcfce7; color: #166534; }
 .gestion-badge.inactivo { background: #f1f5f9; color: #64748b; }
-.gestion-cards { display: grid; grid-template-columns: repeat(2, minmax(250px, 1fr)); gap: 16px; margin-bottom: 26px; }
-.gestion-card { display: block; padding: 20px; border: 1px solid var(--color-border); border-radius: 11px; background: var(--color-surface); color: inherit; text-decoration: none; box-shadow: var(--shadow-sm); }
-.gestion-card:hover { border-color: var(--color-primary); }
-.gestion-card h2 { margin: 0 0 6px; font-size: 1.1rem; }
-.gestion-card p { margin: 0; color: var(--color-text-muted); font-size: .85rem; }
-.validation-errors { color: #b91c1c; font-size: .82rem; }
+.gestion-badge.stock-low { background: #fffbeb; color: #b45309; }
+.gestion-badge.stock-out { background: #fef2f2; color: #dc2626; }
+
+.gestion-cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(250px, 1fr));
+    gap: 16px;
+    margin-bottom: 26px;
+}
+
+.gestion-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 22px;
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    background: var(--color-surface);
+    color: inherit;
+    text-decoration: none;
+    box-shadow: 0 2px 9px rgba(15, 23, 42, .035);
+    transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.gestion-card:hover {
+    transform: translateY(-2px);
+    border-color: #bfdbfe;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, .07);
+}
+
+.gestion-card h2 {
+    margin: 0 0 6px;
+    font-size: 1.08rem;
+    color: var(--color-text-primary);
+}
+
+.gestion-card p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: .86rem;
+    line-height: 1.45;
+}
+
+.validation-errors {
+    color: #b91c1c;
+    font-size: .82rem;
+    margin: 0 0 12px;
+    padding-left: 18px;
+}
+
+@media (max-width: 900px) {
+    .gestion-grid-3 { grid-template-columns: repeat(2, minmax(200px, 1fr)); }
+}
 
 @media (max-width: 720px) {
     .gestion-header { align-items: stretch; flex-direction: column; }
     .gestion-search { flex-wrap: wrap; }
-    .gestion-grid, .gestion-permisos, .gestion-cards { grid-template-columns: 1fr; }
+    .gestion-grid, .gestion-grid-3, .gestion-permisos, .gestion-cards { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .gestion-wrapper, .gestion-panel, .gestion-alert, .gestion-tabla-scroll { animation: none; }
+    .gestion-volver, .gestion-btn, .gestion-card, .gestion-tabla tbody tr, .gestion-permisos label { transition: none; }
 }
