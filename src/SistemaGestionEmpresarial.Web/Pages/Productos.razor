@@ -27,7 +27,7 @@
 
     <form class="gestion-panel" @onsubmit="BuscarAsync" @onsubmit:preventDefault>
         <h2>Buscar productos</h2>
-        <div class="gestion-grid productos-filtros">
+        <div class="gestion-grid gestion-grid-3 productos-filtros">
             <label>Código o ID
                 <input @bind="codigoOId" placeholder="Ej. PRD-001 o 1" />
             </label>
@@ -112,7 +112,20 @@
                             <td><strong>@producto.Codigo</strong></td>
                             <td>@producto.Nombre</td>
                             <td>RD$ @producto.Precio.ToString("N2")</td>
-                            <td>@producto.Stock</td>
+                            <td>
+                                @if (producto.Stock == 0)
+                                {
+                                    <span class="gestion-badge stock-out">Agotado (0)</span>
+                                }
+                                else if (producto.Stock <= 5)
+                                {
+                                    <span class="gestion-badge stock-low">Bajo (@producto.Stock)</span>
+                                }
+                                else
+                                {
+                                    <span class="gestion-badge activo">@producto.Stock</span>
+                                }
+                            </td>
                             <td>@producto.Categoria</td>
                             <td class="gestion-actions-tabla">
                                 <VistaConPermiso Permiso="@Permisos.Modificar">

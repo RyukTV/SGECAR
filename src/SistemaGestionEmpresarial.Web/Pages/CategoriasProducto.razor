@@ -22,7 +22,7 @@
 
     <form class="gestion-search" @onsubmit="BuscarAsync" @onsubmit:preventDefault>
         <input @bind="buscar" placeholder="Buscar por nombre" aria-label="Buscar categorías" />
-        <button class="gestion-btn" type="submit" disabled="@cargando">Buscar</button>
+        <button class="gestion-btn gestion-btn-primary" type="submit" disabled="@cargando">Buscar</button>
         <button class="gestion-btn gestion-btn-light" type="button" @onclick="LimpiarBusquedaAsync" disabled="@cargando">Limpiar</button>
     </form>
 
