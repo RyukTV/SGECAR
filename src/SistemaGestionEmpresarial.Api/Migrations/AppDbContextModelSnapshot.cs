@@ -147,9 +147,6 @@ namespace SistemaGestionEmpresarial.Api.Migrations
                     b.Property<bool>("PuedeGestionarCategorias")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("PuedeGestionarClientes")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("PuedeGestionarRoles")
                         .HasColumnType("bit");
 

@@ -14,6 +14,12 @@ public static class ConfiguracionDeAutorizacion
     {
         services.AddAuthorizationCore(options =>
         {
+            options.AddPolicy(PoliticasDePermiso.PanelAdministrativo, policy =>
+                policy.RequireAssertion(contexto =>
+                    contexto.User.TienePermiso(Permisos.GestionarUsuarios)
+                    || contexto.User.TienePermiso(Permisos.GestionarRoles)
+                    || contexto.User.TienePermiso(Permisos.GestionarCategorias)));
+
             foreach (var permiso in Permisos.Todos)
             {
                 var permisoExigido = permiso;

@@ -4,6 +4,15 @@
     .nav-item { padding: 6px 8px; }
     .brand-tag { display: none; }
 }
+.profile-container { position: relative; }
+.user-chip-button { cursor: pointer; font: inherit; text-align: left; }
+.profile-menu { position: absolute; z-index: 20; right: 0; top: calc(100% + 10px); width: 200px; padding: 7px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; box-shadow: 0 12px 30px rgba(15, 23, 42, .16); color: #0f172a; }
+.profile-menu-identity { padding: 9px 11px; border-bottom: 1px solid #e2e8f0; margin-bottom: 5px; }
+.profile-menu-identity strong, .profile-menu-identity small { display: block; }
+.profile-menu-identity strong { font-size: .82rem; }
+.profile-menu-identity small { color: #64748b; font-size: .72rem; margin-top: 2px; }
+.profile-menu a, .profile-menu button { box-sizing: border-box; display: block; width: 100%; padding: 9px 11px; border: 0; border-radius: 6px; background: transparent; color: #334155; text-align: left; text-decoration: none; font: inherit; font-size: .8rem; cursor: pointer; }
+.profile-menu a:hover, .profile-menu button:hover { background: #f1f5f9; }
 @media (max-width: 700px) {
     .nav-actions { flex-basis: 100%; justify-content: flex-start; }
     .main-content { padding: 24px 16px; }

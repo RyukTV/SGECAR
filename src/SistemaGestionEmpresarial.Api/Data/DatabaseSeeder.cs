@@ -19,7 +19,6 @@ public static class DatabaseSeeder
                 PuedeConsultar = true,
                 PuedeGestionarUsuarios = true,
                 PuedeGestionarRoles = true,
-                PuedeGestionarClientes = true,
                 PuedeGestionarCategorias = true
             },
             new Rol
@@ -31,7 +30,6 @@ public static class DatabaseSeeder
                 PuedeConsultar = true,
                 PuedeGestionarUsuarios = false,
                 PuedeGestionarRoles = false,
-                PuedeGestionarClientes = false,
                 PuedeGestionarCategorias = false
             },
             new Rol
@@ -43,7 +41,6 @@ public static class DatabaseSeeder
                 PuedeConsultar = true,
                 PuedeGestionarUsuarios = false,
                 PuedeGestionarRoles = false,
-                PuedeGestionarClientes = false,
                 PuedeGestionarCategorias = false
             }
         };

@@ -11,13 +11,13 @@ Esta etapa incorpora los módulos de mantenimiento de clientes y productos y com
 Cada cliente contiene los campos `Id`, `Nombre`, `Apellido`, `Telefono`, `Correo` y `Direccion`. La dirección de correo es obligatoria y única.
 
 ### Endpoints en `/api/clientes`:
-- `GET /api/clientes`: lista clientes y admite filtros opcionales por `id`, `buscar` y `correo`.
-- `GET /api/clientes/{id}`: obtiene un cliente por identificador.
-- `POST /api/clientes`: crea un nuevo cliente.
-- `PUT /api/clientes/{id}`: actualiza un cliente existente.
-- `DELETE /api/clientes/{id}`: elimina un cliente.
+- `GET /api/clientes`: lista clientes y admite filtros opcionales por `id`, `buscar` y `correo`. Requiere permiso `Consultar`.
+- `GET /api/clientes/{id}`: obtiene un cliente por identificador. Requiere permiso `Consultar`.
+- `POST /api/clientes`: crea un nuevo cliente. Requiere permiso `Agregar`.
+- `PUT /api/clientes/{id}`: actualiza un cliente existente. Requiere permiso `Modificar`.
+- `DELETE /api/clientes/{id}`: elimina un cliente. Requiere permiso `Eliminar`.
 
-La página `/administracion/clientes` permite consultar, filtrar, registrar, modificar y eliminar clientes, con limpieza independiente de filtros y formulario. Requiere el permiso `GestionarClientes`.
+La página `/administracion/clientes` permite consultar, filtrar, registrar, modificar y eliminar clientes, con limpieza independiente de filtros y formulario. Igual que Productos, usa los permisos por acción: se accede con `Consultar` y los botones «Nuevo cliente», «Editar» y «Eliminar» se muestran solo con `Agregar`, `Modificar` y `Eliminar`, respectivamente. Con los roles iniciales, Supervisor puede consultar y modificar, y Ejecutor puede consultar y agregar.
 
 El formulario separa el prefijo (`809`, `829` o `849`) de los siete dígitos locales. La interfaz inserta automáticamente el guion tras los tres primeros dígitos y guarda el valor completo como `809-555-1234` en `Cliente.Telefono`. Al editar un número válido existente, recupera el prefijo y el número local. El servicio rechaza cualquier teléfono fuera del formato `(809|829|849)-XXX-XXXX`; no se necesita una columna ni migración adicional.
 
@@ -78,7 +78,7 @@ Se utilizan los permisos ya existentes en el sistema:
 
 `/administracion/categorias-productos` permite consultar, crear, modificar y eliminar categorías. El nombre es obligatorio, único y admite hasta 100 caracteres. Una categoría con productos relacionados no se puede eliminar: `DELETE /api/categorias-productos/{id}` responde `409 Conflict`. `Productos.CategoriaId` tiene una FK con borrado restringido. El permiso `GestionarCategorias` habilita el mantenimiento para Administrador y roles personalizados que lo tengan; Supervisor y Ejecutor no lo reciben inicialmente. Los roles personalizados deben iniciar sesión nuevamente para actualizar el JWT.
 
-Los permisos de Productos permanecen por acción: `Consultar`, `Agregar`, `Modificar` y `Eliminar`. Los permisos administrativos `GestionarUsuarios`, `GestionarRoles`, `GestionarClientes` y `GestionarCategorias` se asignan a roles, sin autorizar por nombre de rol codificado.
+Los permisos de Productos y Clientes son por acción: `Consultar`, `Agregar`, `Modificar` y `Eliminar`. Los permisos administrativos `GestionarUsuarios`, `GestionarRoles` y `GestionarCategorias` se asignan a roles, sin autorizar por nombre de rol codificado.
 
 ## 4. Reporte de Productos
 
@@ -114,5 +114,6 @@ Los valores de `rolId` provienen de los roles guardados en la base de datos, med
 
 - La migración `20261027175429_AddProductos` crea la tabla `Productos` con sus restricciones y el índice único `IX_Productos_Codigo`.
 - La migración `20261028181644_AddProductCategoriesAndPermission` conserva los productos existentes, crea `CategoriasProducto`, relaciona cada producto mediante `CategoriaId` y agrega `PuedeGestionarCategorias` a `Roles`.
+- La migración `20261125224421_RemoveGestionarClientesPermission` elimina la columna `PuedeGestionarClientes` de `Roles`, porque Clientes pasó a usar los permisos por acción.
 - El script SQL idempotente general se actualizó en [`database/SGECAR.sql`](../database/SGECAR.sql).
 - El script contiene `Roles`, `Usuarios`, `Clientes`, `CategoriasProducto` y `Productos`, con sus índices únicos, permisos y claves foráneas. No hay cambios de esquema para la máscara telefónica.

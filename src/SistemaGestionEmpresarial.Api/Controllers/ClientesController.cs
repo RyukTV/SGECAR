@@ -8,7 +8,6 @@ namespace SistemaGestionEmpresarial.Api.Controllers;
 
 [ApiController]
 [Route("api/clientes")]
-[Permiso(Permisos.GestionarClientes)]
 [ProducesResponseType(typeof(AccesoDenegadoResponse), StatusCodes.Status401Unauthorized)]
 [ProducesResponseType(typeof(AccesoDenegadoResponse), StatusCodes.Status403Forbidden)]
 public sealed class ClientesController : ControllerBase
@@ -21,6 +20,7 @@ public sealed class ClientesController : ControllerBase
     }
 
     [HttpGet]
+    [Permiso(Permisos.Consultar)]
     [ProducesResponseType(typeof(IReadOnlyList<ClienteResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<ClienteResponse>>> ObtenerTodos(
         [FromQuery] int? id,
@@ -30,6 +30,7 @@ public sealed class ClientesController : ControllerBase
         Ok(await _clientesService.ObtenerTodosAsync(id, buscar, correo, cancellationToken));
 
     [HttpGet("{id:int}")]
+    [Permiso(Permisos.Consultar)]
     [ProducesResponseType(typeof(ClienteResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(MensajeResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ClienteResponse>> ObtenerPorId(int id, CancellationToken cancellationToken)
@@ -41,6 +42,7 @@ public sealed class ClientesController : ControllerBase
     }
 
     [HttpPost]
+    [Permiso(Permisos.Agregar)]
     [ProducesResponseType(typeof(ClienteResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(MensajeResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(MensajeResponse), StatusCodes.Status409Conflict)]
@@ -56,6 +58,7 @@ public sealed class ClientesController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Permiso(Permisos.Modificar)]
     [ProducesResponseType(typeof(ClienteResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(MensajeResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(MensajeResponse), StatusCodes.Status404NotFound)]
@@ -70,6 +73,7 @@ public sealed class ClientesController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [Permiso(Permisos.Eliminar)]
     [ProducesResponseType(typeof(MensajeResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(MensajeResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult> Eliminar(int id, CancellationToken cancellationToken)
