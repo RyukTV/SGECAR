@@ -99,15 +99,15 @@ public sealed class RolesService : IRolesService
                 cancellationToken))
             return ResultadoCrud<RolResponse>.Conflicto("Ya existe un rol con ese nombre.");
 
-        var quitaAdministracion = (rol.PuedeGestionarUsuarios || rol.PuedeGestionarRoles || rol.PuedeGestionarCategorias)
-            && !request.PuedeGestionarUsuarios && !request.PuedeGestionarRoles && !request.PuedeGestionarCategorias;
+        var quitaAdministracion = rol.PuedeGestionarUsuarios && rol.PuedeGestionarRoles
+            && (!request.PuedeGestionarUsuarios || !request.PuedeGestionarRoles);
         if (quitaAdministracion &&
             await _dbContext.Usuarios.AnyAsync(usuario => usuario.RolId == id && usuario.Activo, cancellationToken) &&
             !await _dbContext.Usuarios.AnyAsync(usuario => usuario.RolId != id && usuario.Activo &&
-                (usuario.Rol.PuedeGestionarUsuarios || usuario.Rol.PuedeGestionarRoles || usuario.Rol.PuedeGestionarCategorias),
+                usuario.Rol.PuedeGestionarUsuarios && usuario.Rol.PuedeGestionarRoles,
                 cancellationToken))
             return ResultadoCrud<RolResponse>.Conflicto(
-                "Debe permanecer al menos un usuario activo con permisos administrativos.");
+                "Debe permanecer al menos un usuario activo que pueda gestionar usuarios y roles.");
 
         rol.Nombre = nombre;
         AplicarPermisos(rol, request.PuedeAgregar, request.PuedeModificar, request.PuedeEliminar,

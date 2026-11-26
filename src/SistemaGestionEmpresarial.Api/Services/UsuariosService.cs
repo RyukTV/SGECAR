@@ -155,11 +155,11 @@ public sealed class UsuariosService : IUsuariosService
         if (rol is null)
             return ResultadoCrud<UsuarioResponse>.Validacion("El rol seleccionado no existe.");
 
-        if (usuario.Activo && TienePermisoAdministrativo(usuario.Rol) &&
-            (!request.Activo || !TienePermisoAdministrativo(rol)) &&
+        if (usuario.Activo && PuedeGestionarSistema(usuario.Rol) &&
+            (!request.Activo || !PuedeGestionarSistema(rol)) &&
             !await ExisteOtroAdministradorActivoAsync(id, cancellationToken))
             return ResultadoCrud<UsuarioResponse>.Conflicto(
-                "Debe permanecer al menos un usuario activo con permisos administrativos.");
+                "Debe permanecer al menos un usuario activo que pueda gestionar usuarios y roles.");
 
         usuario.NombreUsuario = nombreUsuario;
         usuario.NombreCompleto = nombreCompleto;
@@ -188,11 +188,11 @@ public sealed class UsuariosService : IUsuariosService
 
         var esAdministradorActivo = await _dbContext.Usuarios
             .AnyAsync(entidad => entidad.Id == id && entidad.Activo &&
-                (entidad.Rol.PuedeGestionarUsuarios || entidad.Rol.PuedeGestionarRoles || entidad.Rol.PuedeGestionarCategorias),
+                entidad.Rol.PuedeGestionarUsuarios && entidad.Rol.PuedeGestionarRoles,
                 cancellationToken);
         if (esAdministradorActivo && !await ExisteOtroAdministradorActivoAsync(id, cancellationToken))
             return ResultadoCrud<bool>.Conflicto(
-                "Debe permanecer al menos un usuario activo con permisos administrativos.");
+                "Debe permanecer al menos un usuario activo que pueda gestionar usuarios y roles.");
 
         _dbContext.Usuarios.Remove(usuario);
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -209,11 +209,11 @@ public sealed class UsuariosService : IUsuariosService
         NombreRol = usuario.Rol.Nombre
     };
 
-    private static bool TienePermisoAdministrativo(Rol rol) =>
-        rol.PuedeGestionarUsuarios || rol.PuedeGestionarRoles || rol.PuedeGestionarCategorias;
+    private static bool PuedeGestionarSistema(Rol rol) =>
+        rol.PuedeGestionarUsuarios && rol.PuedeGestionarRoles;
 
     private Task<bool> ExisteOtroAdministradorActivoAsync(int id, CancellationToken cancellationToken) =>
         _dbContext.Usuarios.AnyAsync(entidad => entidad.Id != id && entidad.Activo &&
-            (entidad.Rol.PuedeGestionarUsuarios || entidad.Rol.PuedeGestionarRoles || entidad.Rol.PuedeGestionarCategorias),
+            entidad.Rol.PuedeGestionarUsuarios && entidad.Rol.PuedeGestionarRoles,
             cancellationToken);
 }
