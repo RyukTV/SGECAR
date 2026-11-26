@@ -155,6 +155,12 @@ public sealed class UsuariosService : IUsuariosService
         if (rol is null)
             return ResultadoCrud<UsuarioResponse>.Validacion("El rol seleccionado no existe.");
 
+        if (usuario.Activo && TienePermisoAdministrativo(usuario.Rol) &&
+            (!request.Activo || !TienePermisoAdministrativo(rol)) &&
+            !await ExisteOtroAdministradorActivoAsync(id, cancellationToken))
+            return ResultadoCrud<UsuarioResponse>.Conflicto(
+                "Debe permanecer al menos un usuario activo con permisos administrativos.");
+
         usuario.NombreUsuario = nombreUsuario;
         usuario.NombreCompleto = nombreCompleto;
         usuario.Activo = request.Activo;
@@ -180,6 +186,14 @@ public sealed class UsuariosService : IUsuariosService
         if (usuario is null)
             return ResultadoCrud<bool>.NoEncontrado("El usuario solicitado no existe.");
 
+        var esAdministradorActivo = await _dbContext.Usuarios
+            .AnyAsync(entidad => entidad.Id == id && entidad.Activo &&
+                (entidad.Rol.PuedeGestionarUsuarios || entidad.Rol.PuedeGestionarRoles || entidad.Rol.PuedeGestionarCategorias),
+                cancellationToken);
+        if (esAdministradorActivo && !await ExisteOtroAdministradorActivoAsync(id, cancellationToken))
+            return ResultadoCrud<bool>.Conflicto(
+                "Debe permanecer al menos un usuario activo con permisos administrativos.");
+
         _dbContext.Usuarios.Remove(usuario);
         await _dbContext.SaveChangesAsync(cancellationToken);
         return ResultadoCrud<bool>.Exito(true, "Usuario eliminado correctamente.");
@@ -194,4 +208,12 @@ public sealed class UsuariosService : IUsuariosService
         RolId = usuario.RolId,
         NombreRol = usuario.Rol.Nombre
     };
+
+    private static bool TienePermisoAdministrativo(Rol rol) =>
+        rol.PuedeGestionarUsuarios || rol.PuedeGestionarRoles || rol.PuedeGestionarCategorias;
+
+    private Task<bool> ExisteOtroAdministradorActivoAsync(int id, CancellationToken cancellationToken) =>
+        _dbContext.Usuarios.AnyAsync(entidad => entidad.Id != id && entidad.Activo &&
+            (entidad.Rol.PuedeGestionarUsuarios || entidad.Rol.PuedeGestionarRoles || entidad.Rol.PuedeGestionarCategorias),
+            cancellationToken);
 }

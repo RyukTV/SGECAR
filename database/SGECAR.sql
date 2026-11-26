@@ -107,7 +107,7 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20261018025318_AddClientesAndGestionarClientes'
 )
 BEGIN
-    UPDATE [Roles] SET [PuedeGestionarClientes] = 1 WHERE [Nombre] = N'Administrador'
+    EXEC(N'UPDATE [Roles] SET [PuedeGestionarClientes] = 1 WHERE [Nombre] = N''Administrador''');
 END;
 GO
 

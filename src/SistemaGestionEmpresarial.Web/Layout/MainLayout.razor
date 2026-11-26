@@ -64,7 +64,8 @@
 
             <AuthorizeView>
                 <Authorized>
-                    @* El perfil lleva al panel de administración, que solo muestra los módulos permitidos al rol. *@
+                    @if (TienePermisoAdministrativo(context.User))
+                    {
                     <NavLink href="administracion" class="user-chip" Match="NavLinkMatch.All" title="Ir al panel de administración">
                         <div class="user-avatar-icon">
                             <svg class="icon-svg user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -87,6 +88,24 @@
                         </svg>
                         <span>Cerrar Sesión</span>
                     </button>
+                    }
+                    else
+                    {
+                        <div class="profile-container">
+                            <button class="user-chip user-chip-button" type="button" aria-expanded="@menuPerfilAbierto" aria-haspopup="true" @onclick="AlternarMenuPerfil" title="Abrir menú de perfil">
+                                <span class="user-avatar-icon"><svg class="icon-svg user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg></span>
+                                <span class="user-meta"><span class="user-name">@context.User.Identity?.Name</span><span class="user-role-badge role-@(context.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value?.ToLower() ?? "default")">@context.User.ObtenerRol()</span></span>
+                            </button>
+                            @if (menuPerfilAbierto)
+                            {
+                                <div class="profile-menu" role="menu">
+                                    <div class="profile-menu-identity"><strong>@context.User.Identity?.Name</strong><small>@context.User.ObtenerRol()</small></div>
+                                    <a href="/" role="menuitem" @onclick="CerrarMenuPerfil">Inicio</a>
+                                    <button type="button" role="menuitem" @onclick="CerrarSesionAsync">Cerrar sesión</button>
+                                </div>
+                            }
+                        </div>
+                    }
                 </Authorized>
                 <NotAuthorized>
                     <NavLink href="login" class="btn-login-nav">
@@ -334,8 +353,16 @@
 </style>
 
 @code {
+    private bool menuPerfilAbierto;
+    private static bool TienePermisoAdministrativo(System.Security.Claims.ClaimsPrincipal usuario) =>
+        usuario.TienePermiso(Permisos.GestionarUsuarios)
+        || usuario.TienePermiso(Permisos.GestionarRoles)
+        || usuario.TienePermiso(Permisos.GestionarCategorias);
+    private void AlternarMenuPerfil() => menuPerfilAbierto = !menuPerfilAbierto;
+    private void CerrarMenuPerfil() => menuPerfilAbierto = false;
     private async Task CerrarSesionAsync()
     {
+        menuPerfilAbierto = false;
         await AuthApi.LogoutAsync();
         Navigation.NavigateTo("/login");
     }

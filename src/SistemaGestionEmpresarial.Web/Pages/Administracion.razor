@@ -1,5 +1,5 @@
 @page "/administracion"
-@attribute [Authorize]
+@attribute [Authorize(Policy = PoliticasDePermiso.PanelAdministrativo)]
 @inject PermisosApiService PermisosApi
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
@@ -8,10 +8,7 @@
 <div class="admin-wrapper">
     <header class="admin-header">
         <h1>Administración del sistema</h1>
-        <p>
-            Módulos disponibles según los permisos de su rol. La matriz proviene de la API,
-            no del navegador: es la misma que el servidor aplica al autorizar cada operación.
-        </p>
+        <p>Módulos administrativos disponibles según los permisos de su rol.</p>
     </header>
 
     @if (!cargando && !tieneModulos)
@@ -32,22 +29,10 @@
                 <p>Administrar roles y los @Permisos.Todos.Count permisos almacenados en SQL Server.</p>
             </a>
         </VistaConPermiso>
-        <VistaConPermiso Permiso="@Permisos.Consultar">
-            <a class="gestion-card" href="/administracion/clientes">
-                <h2>Gestión de Clientes</h2>
-                <p>Consultar, filtrar, crear, modificar y eliminar clientes.</p>
-            </a>
-        </VistaConPermiso>
         <VistaConPermiso Permiso="@Permisos.GestionarCategorias">
             <a class="gestion-card" href="/administracion/categorias-productos">
                 <h2>Categorías de Productos</h2>
                 <p>Registrar, buscar, modificar y eliminar categorías del inventario.</p>
-            </a>
-        </VistaConPermiso>
-        <VistaConPermiso Permiso="@Permisos.Consultar">
-            <a class="gestion-card" href="/administracion/productos">
-                <h2>Gestión de Productos</h2>
-                <p>Consultar, buscar, filtrar por categoría, agregar, modificar y eliminar productos.</p>
             </a>
         </VistaConPermiso>
     </div>
@@ -219,8 +204,7 @@
         // Mismos permisos que controlan las tarjetas de arriba.
         tieneModulos = puedeGestionarRoles
             || estado.User.TienePermiso(Permisos.GestionarUsuarios)
-            || estado.User.TienePermiso(Permisos.GestionarCategorias)
-            || estado.User.TienePermiso(Permisos.Consultar);
+            || estado.User.TienePermiso(Permisos.GestionarCategorias);
         if (puedeGestionarRoles)
             catalogo = await PermisosApi.ObtenerCatalogoAsync();
         cargando = false;

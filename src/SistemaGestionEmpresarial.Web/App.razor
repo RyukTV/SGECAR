@@ -1,25 +1,36 @@
 @* El router decide el acceso a cada ruta: a quien no ha iniciado sesión lo manda al login;
    a quien sí la tiene pero carece del permiso, le explica por qué no puede entrar. *@
+@inject Microsoft.AspNetCore.Components.WebAssembly.Hosting.IWebAssemblyHostEnvironment Entorno
 
 <CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly">
         <Found Context="routeData">
-            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
-                <NotAuthorized Context="sesion">
-                    @if (sesion.User.Identity?.IsAuthenticated == true)
-                    {
-                        <MensajeAccesoDenegado Rol="@sesion.User.ObtenerRol()" />
-                    }
-                    else
-                    {
-                        <RedirectToLogin />
-                    }
-                </NotAuthorized>
-                <Authorizing>
-                    <p class="router-estado" role="status">Verificando sus permisos…</p>
-                </Authorizing>
-            </AuthorizeRouteView>
-            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+            @if (!string.Equals(Entorno.Environment, "Development", StringComparison.OrdinalIgnoreCase) &&
+                (routeData.PageType == typeof(Pages.ApiStatus) || routeData.PageType == typeof(Pages.Operaciones)))
+            {
+                <LayoutView Layout="@typeof(MainLayout)">
+                    <div class="router-estado" role="alert">Esta página no está disponible.</div>
+                </LayoutView>
+            }
+            else
+            {
+                <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                    <NotAuthorized Context="sesion">
+                        @if (sesion.User.Identity?.IsAuthenticated == true)
+                        {
+                            <MensajeAccesoDenegado Rol="@sesion.User.ObtenerRol()" />
+                        }
+                        else
+                        {
+                            <RedirectToLogin />
+                        }
+                    </NotAuthorized>
+                    <Authorizing>
+                        <p class="router-estado" role="status">Verificando sus permisos…</p>
+                    </Authorizing>
+                </AuthorizeRouteView>
+                <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+            }
         </Found>
         <NotFound>
             <PageTitle>Página no encontrada</PageTitle>

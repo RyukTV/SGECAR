@@ -11,6 +11,7 @@ namespace SistemaGestionEmpresarial.Contracts.Autorizacion;
 /// </remarks>
 public static class PoliticasDePermiso
 {
+    public const string PanelAdministrativo = "PanelAdministrativo";
     private const string Prefijo = "Permiso:";
 
     public const string Consultar = Prefijo + Permisos.Consultar;
